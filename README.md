@@ -83,7 +83,7 @@ sudo docker run -it nginx-http-auth-request kill
 
 ## Examples:
 
-### Server configuration
+### Server
 ```yaml
 # This is the default configuration file
 
@@ -147,7 +147,7 @@ users:
   admin: sha256:10000:abcdefghijklmnopQRSTUVWXYZ==:UuRV7et/zfAIWowdZswGbCBfArhIheeeVmAXBw7OsWo=
 ```
 
-### Nginx configuration
+### Nginx
 ```nginx
 server {
 
@@ -185,9 +185,7 @@ server {
     
 }
 ```
-
-### Image
-![Screenshot](examples/screenshot.png)
-
+### Jellyfin
+![jellyfin.yml](examples/jellyfin.yml)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
