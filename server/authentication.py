@@ -107,14 +107,14 @@ class AuthenticationModule:
             raise ConfigurationError(
                 f"module: 'method' {self.method} is not supported. Check your configuration!!!")
 
-        if self.mode not in ["local", "upstream"]:
+        if self.mode not in ["local", "upstream",'dynamic']:
             logger.fatal(
-                f"module: 'mode' {self.mode} can be either ['local', 'upstream'] only. Check your configuration!!!")
+                f"module: 'mode' {self.mode} can be either ['local', 'upstream','dynamic'] only. Check your configuration!!!")
 
             raise ConfigurationError(
-                f"module: 'mode' {self.mode} can be either ['local', 'upstream'] only. Check your configuration!!!")
+                f"module: 'mode' {self.mode} can be either ['local', 'upstream','dynamic'] only. Check your configuration!!!")
 
-        if self.mode == "upstream" and self.upstream == None:
+        if self.mode in ["upstream",'dynamic'] and self.upstream == None:
             logger.fatal(
                 f"module: 'upstream:' key must be configured when using {self.mode} mode")
 
@@ -166,6 +166,10 @@ class AuthenticationModule:
 
         elif self.mode == "local":
             success = server.users.verify_password(username, password)
+
+        elif self.mode == "dynamic":
+            status_code = self.upstream.login(username, password)
+            success = True if status_code == 200 else server.users.verify_password(username, password)
 
         if success and self.is_user_part_of_group(username):
             logger.info(f"'{username}' login successful - returning 200")

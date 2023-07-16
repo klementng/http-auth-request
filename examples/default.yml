@@ -50,6 +50,33 @@ modules:
       users:
         - demo
 
+  dynamic: #i.e. http://localhost:9999/dynamic
+  
+    mode: dynamic # check upstream first if fails check local
+
+    method: basic
+    realm: upstream users
+
+    upstream:
+      # kwargs as follows requests.request() see: https://requests.readthedocs.io/en/latest/api/ 
+      # allow_redirects is set to false by default
+
+      # <<username>> / <<password>> are replaced with user inputs
+
+      method: POST
+      url: https://www.example.com/authenticate
+      data: >-
+        {"Username":"<<username>>","Password":"<<password>>"}
+      headers:
+        Content-Type: application/json
+        
+      # json:
+      #   Username: <<username>>
+      #   Password: <<password>>
+      
+      users:
+        - admin
+        - 
 users:
   # supported password format
   # text:plaintext_password

@@ -7,12 +7,5 @@
         "*test*.py"
     ],
     "python.testing.pytestEnabled": false,
-    "python.testing.unittestEnabled": true,
-    "cSpell.words": [
-        "addl",
-        "authenticatebyname",
-        "authreq",
-        "Emby",
-        "forrbbien"
-    ]
+    "python.testing.unittestEnabled": true
 }
