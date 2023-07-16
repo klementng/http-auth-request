@@ -1,0 +1,61 @@
+# This is the default configuration file generated on first run
+# Restart the server / docker container after making changes to this file
+
+settings:
+  server:
+    host: '0.0.0.0' #listening ip address
+    port: 9999      #listening port
+
+modules:
+
+  default: #i.e. http://localhost:9999/ or http://localhost:9999/default
+    mode: local # use local database
+
+    # http authentication parameters
+    method: basic
+    realm: default users
+
+  admins: #i.e. http://localhost:9999/admin
+    mode: local
+    method: basic
+    realm: admin users
+
+    # restrict login to the following usernames:
+    users:
+      - admin
+
+  upstream: #i.e. http://localhost:9999/upstream
+    mode: upstream # do the password checking upstream
+
+    method: basic
+    realm: upstream users
+
+    upstream:
+      # kwargs as follows requests.request() see: https://requests.readthedocs.io/en/latest/api/ 
+      # allow_redirects is set to false by default
+
+      # <<username>> / <<password>> are replaced with user inputs
+
+      method: POST
+      url: https://www.example.com/authenticate
+      data: >-
+        {"Username":"<<username>>","Password":"<<password>>"}
+      headers:
+        Content-Type: application/json
+        
+      # json:
+      #   Username: <<username>>
+      #   Password: <<password>>
+      
+      users:
+        - demo
+
+users:
+  # supported password format
+  # text:plaintext_password
+  # algo:iterations:b64(hash)
+  # algo:iterations:b64(salt):b64(hash)
+
+  #user1: text:password
+  user:  sha256:10000:///////////////////////abc==:8WR8KTAo2P0y9bRMkasWdKxpdBupkNBSLU4X6vz+bSg=
+  admin: sha256:10000:abcdefghijklmnopQRSTUVWXYZ==:UuRV7et/zfAIWowdZswGbCBfArhIheeeVmAXBw7OsWo=

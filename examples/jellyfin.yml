@@ -1,0 +1,29 @@
+
+settings:
+  server:
+    host: "0.0.0.0"
+    port: 9999
+
+modules:
+  jellyfin: &jellyfin # i.e. http://localhost:9999/jellyfin
+    mode: upstream # do the password checking in upstream
+
+    method: Basic
+    realm: jellyfin users
+
+    upstream:
+      url: https://demo.jellyfin.org/stable/Users/authenticatebyname
+      data: >-
+        {"Username":"<<username>>","Pw":"<<password>>"}
+  #      json:
+  #        Username: <<username>>
+  #        Pw: <<password>>
+      headers:
+        Content-Type: application/json
+        X-Emby-Authorization: MediaBrowser Client="nginx", Device="server", DeviceId="0", Version="1.0"
+  
+  jellyfin/admins: # i.e. http://localhost:9999/jellyfin/admins
+    <<: *jellyfin
+
+    users:
+      - demo
