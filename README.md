@@ -142,7 +142,7 @@ server {
 
     server_name www.example.com;
 
-    location = /users {
+    location /users {
       internal;
 
       proxy_set_header X-Original-URI $request_uri;
