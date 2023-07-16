@@ -33,8 +33,10 @@ services:
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Usage:
-Server Environmental variable:
- <table>
+
+### Server Setup
+Docker environmental variables:
+<table>
   <tr>
     <th>Name</th>
     <th>Description</th>
@@ -66,6 +68,18 @@ Server Environmental variable:
     <td>yaml: SETTINGS_PATH | sqlite3: ${CONFIG_DIR}/data.db</td>
   </tr>
 </table>  
+
+### Managing Users
+```bash
+sudo docker run -it nginx-http-auth-request users add <username>
+sudo docker run -it nginx-http-auth-request users edit <username>
+sudo docker run -it nginx-http-auth-request users delete <username>
+```
+### Starting / killing server
+```bash
+sudo docker run -it nginx-http-auth-request start
+sudo docker run -it nginx-http-auth-request kill
+```
 
 ## Examples:
 
