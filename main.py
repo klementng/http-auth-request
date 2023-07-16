@@ -3,10 +3,9 @@ import logging
 import sys
 import time
 import argparse
-
 import pidfile
-from lockfile.pidlockfile import PIDLockFile
-from lockfile import AlreadyLocked
+
+
 
 os.environ["CONFIG_DIR"] =  os.getenv("CONFIG_DIR","/config")
 os.environ["SETTINGS_PATH"] = os.getenv("SETTINGS_PATH",os.path.join(os.environ["CONFIG_DIR"] ,'settings.yml'))
@@ -27,8 +26,6 @@ if __name__ == '__main__':
     if args.mode == 'server':
         parser.add_argument("action",type=str,help="Select actions",choices=["start","kill"])
         args = parser.parse_args()
-
-
 
         if args.action == 'start':
                 try:

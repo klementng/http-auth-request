@@ -5,5 +5,5 @@ COPY . .
 
 RUN pip install -r /app/requirements.txt
 
-ENTRYPOINT [ "python3" "/app/main.py" ]
-CMD server start
+ENTRYPOINT ["python3","/app/main.py"]
+CMD ["server", "start"]

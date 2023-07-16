@@ -32,32 +32,20 @@ app = Flask(__name__)
 modules = None
 settings = None
 
+if not os.path.exists(SETTINGS_PATH):
+
+    logger.critical(
+        f"Config file not found, creating config file at {SETTINGS_PATH}...")
+    logger.critical(
+        "Please edit the config file and restart the server !!!")
+
+    os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
+    shutil.copy("examples/default.yml", SETTINGS_PATH)
+    os.chmod(SETTINGS_PATH, 600)
+
 try:
     logger.debug("Opening config file")
     yaml_f = open(SETTINGS_PATH)
-
-except OSError as e:
-
-    if not os.path.exists(SETTINGS_PATH):
-
-        logger.critical(
-            f"Config file not found, creating config file at {SETTINGS_PATH}...")
-        logger.critical(
-            "Please edit the config file and restart the server !!!")
-
-        os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
-        shutil.copy("examples/default.yml", SETTINGS_PATH)
-        os.chmod(SETTINGS_PATH, 600)
-
-        raise
-
-    else:
-        logger.critical(
-            f"Unable to read config file. Check your file permissions")
-
-        raise
-
-try:
     logger.debug("Parsing YAML config file")
     config = ruamel.yaml.safe_load(yaml_f)
     yaml_f.close()
