@@ -60,14 +60,14 @@ if __name__ == '__main__':
         args = parser.parse_args()
         if args.action == "add":
             if args.password == None:
-                args.password = getpass("Enter user password:")
+                args.password = getpass.getpass("Enter user password:")
             
             status, msg = server.users.add_user(args.username[0],args.password[0],algo=args.algo,salt_bytes=args.salt_bytes,iterations=args.iterations)
             print(msg)
 
         elif args.action == "edit":
             if args.password == None:
-                args.password = getpass("Enter user password:")
+                args.password = getpass.getpass("Enter user password:")
             
             status, msg = server.users.edit_user(args.username[0],args.password[0],algo=args.algo,salt_bytes=args.salt_bytes,iterations=args.iterations)
             print(msg)
