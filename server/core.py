@@ -89,8 +89,8 @@ def start(debug_mode: bool = False) -> None:
         )
 
 
-@app.route("/", defaults={"path": "default"})
-@app.route("/<path:path>")
+@app.route("/", defaults={"path": "default"}, methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
+@app.route("/<path:path>", methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
 def main(path):
     """Main flask application"""
 

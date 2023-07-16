@@ -29,11 +29,19 @@ if __name__ == '__main__':
         args = parser.parse_args()
 
         if args.action == 'start':
+            
+            if os.path.exists('pidfile'):
                 try:
-                    with pidfile.PIDFile("pidfile"):
-                        server.core.start()
-                except pidfile.AlreadyRunningError:
-                    print('Server already running!')
+                    # check if process is running
+                    os.kill(int(open('pidfile').read()), 0)
+                except OSError:
+                    os.remove('pidfile')
+
+            try:
+                with pidfile.PIDFile("pidfile"):
+                    server.core.start()
+            except pidfile.AlreadyRunningError:
+                print('Server already running!')
 
         elif args.action == 'kill':
             try:

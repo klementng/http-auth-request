@@ -11,7 +11,10 @@
             "program": "main.py",
             "args": ["server","start"],
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
+            "env": {
+                "CONFIG_DIR": "tests/data/"
+              }
         }
     ]
 }
