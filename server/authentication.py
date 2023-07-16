@@ -47,7 +47,6 @@ class AuthenticationUpstream:
 
     def __post_init__(self):
         self.method = self.method.upper()
-        print(self.headers)
 
     def login(self, username, password):
         logger.debug(f"{username} is logging in upstream at {self.url}")

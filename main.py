@@ -4,6 +4,7 @@ import sys
 import time
 import argparse
 import pidfile
+import getpass
 
 
 
@@ -50,8 +51,8 @@ if __name__ == '__main__':
     if args.mode == "users":
         parser.add_argument("action",type=str,help="Select actions",choices=["add","delete","edit"])
         parser.add_argument("username",type=str,nargs=1)
-        parser.add_argument("password",type=str,nargs="?")
 
+        parser.add_argument("--password",type=str,nargs=1)
         parser.add_argument("--algo",type=str,help="hashing algorithm to be used",default='sha256')
         parser.add_argument("--salt_bytes",type=int,help="number of salt bytes",default=16)
         parser.add_argument("--iterations",type=int,default=10000)
@@ -59,16 +60,14 @@ if __name__ == '__main__':
         args = parser.parse_args()
         if args.action == "add":
             if args.password == None:
-                print("A password is required")
-                exit(1)
+                args.password = getpass("Enter user password:")
             
             status, msg = server.users.add_user(args.username[0],args.password[0],algo=args.algo,salt_bytes=args.salt_bytes,iterations=args.iterations)
             print(msg)
 
         elif args.action == "edit":
             if args.password == None:
-                print("A password is required")
-                exit(1)
+                args.password = getpass("Enter user password:")
             
             status, msg = server.users.edit_user(args.username[0],args.password[0],algo=args.algo,salt_bytes=args.salt_bytes,iterations=args.iterations)
             print(msg)
