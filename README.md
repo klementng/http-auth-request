@@ -51,7 +51,7 @@ Docker environmental variables:
   </tr>
   <tr>
     <td>CACHE_TTL</td>
-    <td>Header Cache TTL </td>
+    <td>Header Cache TTL (seconds) </td>
     <td>float</td>
     <td>60</td>
   </tr>
