@@ -1,4 +1,4 @@
-#! /bin/env /bin/sh 
+#! /bin/env /bin/bash 
 cd /app
 python3 main.py server $@
 
