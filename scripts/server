@@ -1,0 +1,2 @@
+#! /bin/env /bin/sh 
+python3 ../main.py server $@

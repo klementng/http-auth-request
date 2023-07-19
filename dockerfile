@@ -4,6 +4,6 @@ WORKDIR /app
 COPY . .
 
 RUN pip install -r /app/requirements.txt
+ENV PATH="$PATH:/app/scripts"
 
-ENTRYPOINT ["python3","/app/main.py"]
 CMD ["server", "start"]

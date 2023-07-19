@@ -50,6 +50,12 @@ Docker environmental variables:
     <td>/config</td>
   </tr>
   <tr>
+    <td>CACHE_TTL</td>
+    <td>Header Cache TTL </td>
+    <td>float</td>
+    <td>60</td>
+  </tr>
+  <tr>
     <td>SETTINGS_PATH</td>
     <td>Path to settings file</td>
     <td>Any</td>
@@ -71,14 +77,14 @@ Docker environmental variables:
 
 ### Managing Users
 ```bash
-sudo docker run -it nginx-http-auth-request users add <username>
-sudo docker run -it nginx-http-auth-request users edit <username>
-sudo docker run -it nginx-http-auth-request users delete <username>
+sudo docker exec -it nginx-http-auth-request users add <username>
+sudo docker exec -it nginx-http-auth-request users edit <username>
+sudo docker exec -it nginx-http-auth-request users delete <username>
 ```
 ### Starting / killing server
 ```bash
-sudo docker run -it nginx-http-auth-request start
-sudo docker run -it nginx-http-auth-request kill
+sudo docker exec -it nginx-http-auth-request server start
+sudo docker exec -it nginx-http-auth-request server kill
 ```
 
 ## Examples:
@@ -159,15 +165,19 @@ server {
     location /users {
       internal;
 
-      proxy_set_header X-Original-URI $request_uri;
-
       location /users/default
       {
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Original-URI $request_uri
         proxy_pass http://localhost:9999/default;
       }
 
       location /users/admins
       {
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Original-URI $request_uri
         proxy_pass http://localhost:9999/admins;
       }
 

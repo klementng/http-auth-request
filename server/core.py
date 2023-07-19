@@ -22,6 +22,7 @@ from server.shared import ConfigurationError
 
 CONFIG_DIR = os.getenv("CONFIG_DIR")
 SETTINGS_PATH = os.getenv("SETTINGS_PATH")
+CACHE_TTL = float(os.getenv("CACHE_TTL"))
 
 if SETTINGS_PATH == None:
     raise EnvironmentError("SETTINGS_PATH must be set")
@@ -109,7 +110,7 @@ def main(path):
 
 
 # caching to reduce server load due to burst requests
-@cachetools.func.ttl_cache(ttl=60)
+@cachetools.func.ttl_cache(ttl=CACHE_TTL)
 def process_auth_header(auth_header: str, group: str) -> Response:
     """Processes incoming 'Authorization' header
 

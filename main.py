@@ -6,14 +6,23 @@ import argparse
 import pidfile
 import getpass
 
-
-
+os.chdir(os.path.dirname(__file__))
 os.environ["CONFIG_DIR"] =  os.getenv("CONFIG_DIR","/config")
 os.environ["SETTINGS_PATH"] = os.getenv("SETTINGS_PATH",os.path.join(os.environ["CONFIG_DIR"] ,'settings.yml'))
 
+os.environ["CACHE_TTL"] = os.getenv("CACHE_TTL", '60')
 os.environ["LOG_LEVEL"] = os.getenv("LOG_LEVEL","DEBUG")
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(funcName)s() - %(levelname)s - %(message)s',level=logging.INFO)
+if os.environ["LOG_LEVEL"].upper() == "DEBUG":
+    level = logging.DEBUG
+
+elif os.environ["LOG_LEVEL"].upper() == "WARNING":
+    level = logging.WARNING
+
+else:
+    level = logging.INFO
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(funcName)s() - %(levelname)s - %(message)s',level=level)
 
 import server.core
 import server.users
