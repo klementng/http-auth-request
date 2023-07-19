@@ -8,4 +8,4 @@ COPY . .
 
 ENV PATH="$PATH:/app/scripts"
 
-CMD ["server", "start"]
+CMD ["server.core", "start"]
