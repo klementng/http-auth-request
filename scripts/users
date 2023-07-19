@@ -1,3 +1,4 @@
 #! /bin/env /bin/sh
 cd /app
 python3 main.py users $@
+
