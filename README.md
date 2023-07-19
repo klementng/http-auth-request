@@ -169,7 +169,7 @@ server {
       {
         proxy_pass_request_body off;
         proxy_set_header Content-Length "";
-        proxy_set_header X-Original-URI $request_uri
+        proxy_set_header X-Original-URI $request_uri;
         proxy_pass http://localhost:9999/default;
       }
 
@@ -177,7 +177,7 @@ server {
       {
         proxy_pass_request_body off;
         proxy_set_header Content-Length "";
-        proxy_set_header X-Original-URI $request_uri
+        proxy_set_header X-Original-URI $request_uri;
         proxy_pass http://localhost:9999/admins;
       }
 
