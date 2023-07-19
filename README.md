@@ -77,14 +77,14 @@ Docker environmental variables:
 
 ### Managing Users
 ```bash
-sudo docker exec -it nginx-http-auth-request users add <username>
-sudo docker exec -it nginx-http-auth-request users edit <username>
-sudo docker exec -it nginx-http-auth-request users delete <username>
+sudo docker exec -it nginx-http-auth-request server.users add <username>
+sudo docker exec -it nginx-http-auth-request server.users edit <username>
+sudo docker exec -it nginx-http-auth-request server.users delete <username>
 ```
 ### Starting / killing server
 ```bash
-sudo docker exec -it nginx-http-auth-request server start
-sudo docker exec -it nginx-http-auth-request server kill
+sudo docker exec -it nginx-http-auth-request server.core start
+sudo docker exec -it nginx-http-auth-request server.core kill
 ```
 
 ## Examples:
