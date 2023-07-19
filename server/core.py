@@ -22,7 +22,7 @@ from server.shared import ConfigurationError
 
 CONFIG_DIR = os.getenv("CONFIG_DIR")
 SETTINGS_PATH = os.getenv("SETTINGS_PATH")
-CACHE_TTL = float(os.getenv("CACHE_TTL"),"60")
+CACHE_TTL = float(os.getenv("CACHE_TTL","60"))
 
 if SETTINGS_PATH == None:
     raise EnvironmentError("SETTINGS_PATH must be set")
