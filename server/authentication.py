@@ -15,8 +15,6 @@ from server.shared import ConfigurationError
 
 logger = logging.getLogger(__name__)
 
-from flask import request as flask_request
-
 @dataclass_json(undefined=Undefined.INCLUDE)
 @dataclass
 class AuthenticationUpstream:
@@ -50,10 +48,7 @@ class AuthenticationUpstream:
     def __post_init__(self):
         self.method = self.method.upper()
 
-        if self.forward_headers == True:
-            self.headers.update(flask_request.headers)
-
-    def login(self, username, password):
+    def login(self, username, password, headers={}):
         logger.debug(f"{username} is logging in upstream at {self.url}")
 
         kw = self.to_json().replace(
@@ -63,7 +58,9 @@ class AuthenticationUpstream:
         )
 
         kw = json.loads(kw)
-        kw.pop('forward_headers')
+
+        if kw.pop('forward_headers'):
+            kw.update(headers)
 
         if "kwargs" in kw:
             kw.update(kw.pop("kwargs"))
@@ -145,7 +142,7 @@ class AuthenticationModule:
         else:
             return username in self.users
 
-    def login(self, username, password):
+    def login(self, username, password, headers = {}):
         """Login to server
 
         Processes the login request using username and password locally or 
@@ -166,7 +163,7 @@ class AuthenticationModule:
         success = False
 
         if self.mode == "upstream":
-            status_code = self.upstream.login(username, password)
+            status_code = self.upstream.login(username, password, headers)
             success = True if status_code == 200 else False
 
         elif self.mode == "local":

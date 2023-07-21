@@ -142,7 +142,7 @@ def process_auth_header(auth_header: str, group: str) -> Response:
         return abort(401)
 
     if method == "Basic":
-        status_code = mod.login(username, password)
+        status_code = mod.login(username, password,request.headers)
 
         if status_code == 200:
             return Response("Success", 200)
