@@ -62,7 +62,7 @@ class AuthenticationUpstream:
             "<<password>>", password
         )
 
-        kw = json.loads(kw)
+        kw = json.loads(kw).pop("forward_headers")
 
         if "kwargs" in kw:
             kw.update(kw.pop("kwargs"))
