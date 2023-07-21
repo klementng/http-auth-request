@@ -15,6 +15,7 @@ from server.shared import ConfigurationError
 
 logger = logging.getLogger(__name__)
 
+from flask import request as flask_request
 
 @dataclass_json(undefined=Undefined.INCLUDE)
 @dataclass
@@ -38,6 +39,7 @@ class AuthenticationUpstream:
     url: str
     method: str = "POST"
     allow_redirects: bool = False
+    forward_headers: bool = False
 
     data: str | None = None
     json: dict | None = None
@@ -47,6 +49,9 @@ class AuthenticationUpstream:
 
     def __post_init__(self):
         self.method = self.method.upper()
+
+        if self.forward_headers == True:
+            self.headers.update(flask_request.headers)
 
     def login(self, username, password):
         logger.debug(f"{username} is logging in upstream at {self.url}")
