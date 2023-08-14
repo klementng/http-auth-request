@@ -102,13 +102,13 @@ def start(debug_mode: bool = False) -> None:
 @app.route("/<path:path>", methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
 def main(path):
     """Main flask application"""
+        
+    global SETTINGS_MTIME
+    global MODULES    
+    global SETTINGS
 
     if SETTINGS_MTIME != os.stat(SETTINGS_PATH).st_mtime:
         logger.info("Changes to settings detected! reloading authentication modules")
-        
-        global SETTINGS_MTIME
-        global MODULES    
-        global SETTINGS
         
         try:
             SETTINGS,MODULES = parse_config()
