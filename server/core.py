@@ -27,12 +27,13 @@ CACHE_TTL = float(os.getenv("CACHE_TTL","60"))
 if SETTINGS_PATH == None:
     raise EnvironmentError("SETTINGS_PATH must be set")
 
-logger = logging.getLogger(__name__)
-app = Flask(__name__)
-
 MODULES = None
 SETTINGS = None
 SETTINGS_MTIME = os.stat(SETTINGS_PATH).st_mtime
+
+logger = logging.getLogger(__name__)
+app = Flask(__name__)
+
 
 if not os.path.exists(SETTINGS_PATH):
 
