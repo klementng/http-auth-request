@@ -30,8 +30,9 @@ if SETTINGS_PATH == None:
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
-modules = None
-settings = None
+MODULES = None
+SETTINGS = None
+SETTINGS_MTIME = os.stat(SETTINGS_PATH).st_mtime
 
 if not os.path.exists(SETTINGS_PATH):
 
@@ -44,23 +45,29 @@ if not os.path.exists(SETTINGS_PATH):
     shutil.copy("examples/default.yml", SETTINGS_PATH)
     os.chmod(SETTINGS_PATH, 600)
 
-try:
-    logger.debug("Opening config file")
-    yaml_f = open(SETTINGS_PATH)
-    logger.debug("Parsing YAML config file")
-    config = ruamel.yaml.safe_load(yaml_f)
-    yaml_f.close()
 
-    settings = config["settings"]
-    modules = config["modules"]
+def parse_config():
+    try:
+        logger.debug("Opening config file")
+        yaml_f = open(SETTINGS_PATH)
+        logger.debug("Parsing YAML config file")
+        config = ruamel.yaml.safe_load(yaml_f)
+        yaml_f.close()
 
-    for key in modules.keys():
-        modules[key] = AuthenticationModule.from_dict(modules[key])
+        settings = config["settings"]
+        modules = config["modules"]
 
-except Exception as e:
-    logger.fatal(f"Aborting. Invalid Configuration: {e} ")
-    raise
+        for key in modules.keys():
+            modules[key] = AuthenticationModule.from_dict(modules[key])
 
+        return settings,modules
+
+    except Exception as e:
+        logger.fatal(f"Aborting. Invalid Configuration: {e} ")
+        raise
+
+
+SETTINGS,MODULES = parse_config()
 
 def start(debug_mode: bool = False) -> None:
     """Start the server using waitress
@@ -74,19 +81,19 @@ def start(debug_mode: bool = False) -> None:
     Raises:
         SystemExit: failed to parse config file 
     """
-    global modules
-    global settings
+    global MODULES
+    global SETTINGS
 
     logger.info("Server started!")
 
     if debug_mode == True:
-        app.run(settings["server"]["host"],
-                settings["server"]["port"], debug=True)
+        app.run(SETTINGS["server"]["host"],
+                SETTINGS["server"]["port"], debug=True)
     else:
         waitress.serve(
             app,
-            host=settings["server"]["host"],
-            port=settings["server"]["port"]
+            host=SETTINGS["server"]["host"],
+            port=SETTINGS["server"]["port"]
         )
 
 
@@ -95,9 +102,23 @@ def start(debug_mode: bool = False) -> None:
 def main(path):
     """Main flask application"""
 
+    if SETTINGS_MTIME != os.stat(SETTINGS_PATH).st_mtime:
+        logger.info("Changes to settings detected! reloading authentication modules")
+        
+        global SETTINGS_MTIME
+        global MODULES    
+        global SETTINGS
+        
+        try:
+            SETTINGS,MODULES = parse_config()
+            SETTINGS_MTIME = os.stat(SETTINGS_PATH).st_mtime
+
+        except:
+            logger.critical("Unable to reload authentication modules!. Check your config!")
+
     request.path = path
 
-    if path not in modules:
+    if path not in MODULES:
         return abort(404)
 
     auth_header = request.headers.get("Authorization")
@@ -129,7 +150,7 @@ def process_auth_header(auth_header: str, group: str) -> Response:
     try:
         method, data = auth_header.split(" ")
         username, password = str(base64.b64decode(data), 'utf-8').split(":", 1)
-        mod = modules[group]
+        mod = MODULES[group]
 
     except KeyError:
         logger.warn(
@@ -170,7 +191,7 @@ def unauthorized(e: int, msg="Unauthorized") -> Response:
     Returns:
         Response(msg, 401)
     """
-    m = modules.get(request.path)
+    m = MODULES.get(request.path)
 
     if m != None:
         return Response(msg, 401, {'WWW-Authenticate': f'{m.method} realm="{m.realm}"'})
