@@ -23,6 +23,7 @@ modules:
     mode: upstream # do the password checking in upstream
     method: basic
     realm: upstream users
+    forward_request_headers: true
 
     upstream:
       url: https://demo.jellyfin.org/stable/Users/authenticatebyname

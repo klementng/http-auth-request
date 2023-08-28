@@ -29,6 +29,7 @@ modules:
 
     method: basic
     realm: upstream users
+    forward_request_headers: false
 
     upstream:
       # kwargs as follows requests.request() see: https://requests.readthedocs.io/en/latest/api/ 

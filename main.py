@@ -6,7 +6,6 @@ import argparse
 import pidfile
 import getpass
 
-os.chdir(os.path.dirname(__file__))
 os.environ["CONFIG_DIR"] =  os.getenv("CONFIG_DIR","/config")
 os.environ["SETTINGS_PATH"] = os.getenv("SETTINGS_PATH",os.path.join(os.environ["CONFIG_DIR"] ,'settings.yml'))
 

@@ -122,18 +122,26 @@ def main(path):
     if path not in MODULES:
         return abort(404)
 
-    auth_header = request.headers.get("Authorization")
-    if auth_header != None:
-        return process_auth_header(auth_header, path)
+    auth_header = request.headers.get("Authorization", None)
+    allowed_users = request.args.get('allowed_users', None)
+    denied_users = request.args.get('denied_users', None)
 
-    else:
+    if auth_header == None:
         logger.debug("No 'Authorization' header sent. Returning 401")
         return abort(401)
+
+    if allowed_users != None:
+        allowed_users = tuple(allowed_users.split(","))
+    
+    if denied_users != None:
+        denied_users = tuple(denied_users.split(","))
+
+    return process_auth_header(auth_header, path, allowed_users, denied_users)
 
 
 # caching to reduce server load due to burst requests
 @cachetools.func.ttl_cache(ttl=CACHE_TTL)
-def process_auth_header(auth_header: str, group: str) -> Response:
+def process_auth_header(auth_header: str, module: str, allowed_users: tuple = None, denied_users: tuple = None) -> Response:
     """Processes incoming 'Authorization' header
 
     Args:
@@ -151,7 +159,7 @@ def process_auth_header(auth_header: str, group: str) -> Response:
     try:
         method, data = auth_header.split(" ")
         username, password = str(base64.b64decode(data), 'utf-8').split(":", 1)
-        mod = MODULES[group]
+        mod = MODULES[module]
 
     except KeyError:
         logger.warn(
@@ -163,8 +171,19 @@ def process_auth_header(auth_header: str, group: str) -> Response:
             f"A malformed 'Authorization' header received, Returning 401")
         return abort(401)
 
+    if allowed_users != None and username not in allowed_users:
+        logger.warn(
+            f"User: {username} not in accepted users args: {allowed_users}")        
+        return abort(403)
+    
+    if denied_users != None and username in denied_users:
+        logger.warn(
+            f"User: {username} is denied due to denied_users args: {denied_users}")        
+        return abort(403)
+
+
     if method == "Basic":
-        status_code = mod.login(username, password,request.headers)
+        status_code = mod.login(username, password, flask_request=request)
 
         if status_code == 200:
             return Response("Success", 200)
@@ -176,7 +195,7 @@ def process_auth_header(auth_header: str, group: str) -> Response:
             return abort(401)
 
     else:
-        logger.warn(f"{method} is not supported. Returning 401")
+        logger.warn(f"http authentication '{method}' is not supported. Returning 401")
         return abort(401)
 
 

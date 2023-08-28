@@ -4,6 +4,7 @@ Module containing classes that handle authentication.
 
 import json
 import requests
+import flask
 import logging
 
 from dataclasses_json import dataclass_json, Undefined, CatchAll
@@ -37,7 +38,7 @@ class AuthenticationUpstream:
     url: str
     method: str = "POST"
     allow_redirects: bool = False
-    forward_headers: bool = False
+    forward_request_headers: bool = False
 
     data: str | None = None
     json: dict | None = None
@@ -48,7 +49,7 @@ class AuthenticationUpstream:
     def __post_init__(self):
         self.method = self.method.upper()
 
-    def login(self, username, password, headers={}):
+    def login(self, username, password, flask_request=None):
         logger.debug(f"{username} is logging in upstream at {self.url}")
 
         kw = self.to_json().replace(
@@ -57,10 +58,14 @@ class AuthenticationUpstream:
             "<<password>>", password
         )
 
-        kw = json.loads(kw)
+        kw:dict = json.loads(kw)
 
-        if kw.pop('forward_headers'):
-            kw.update(headers)
+        if kw.pop('forward_request_headers') and flask_request != None:
+            kw.setdefault('headers',{})
+            kw['headers'].update(flask_request.headers)
+        
+        logger.debug(flask_request)
+        logger.debug(kw)
 
         if "kwargs" in kw:
             kw.update(kw.pop("kwargs"))
@@ -142,7 +147,7 @@ class AuthenticationModule:
         else:
             return username in self.users
 
-    def login(self, username, password, headers = {}):
+    def login(self, username, password, flask_request=None):
         """Login to server
 
         Processes the login request using username and password locally or 
@@ -163,7 +168,7 @@ class AuthenticationModule:
         success = False
 
         if self.mode == "upstream":
-            status_code = self.upstream.login(username, password, headers)
+            status_code = self.upstream.login(username, password, flask_request)
             success = True if status_code == 200 else False
 
         elif self.mode == "local":
