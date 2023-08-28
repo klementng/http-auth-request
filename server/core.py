@@ -100,8 +100,8 @@ def start(debug_mode: bool = False) -> None:
 
 
 @app.route("/", defaults={"path": "default"}, methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
-@app.route("/<path:catch_all>", methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
-def main(catch_all):
+@app.route("/<path:path>", methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
+def main(path):
     """Main flask application"""
 
     global SETTINGS_MTIME
@@ -118,7 +118,7 @@ def main(catch_all):
         except:
             logger.critical("Unable to reload authentication modules!. Check your config!")
 
-    logger.debug(catch_all)
+    logger.debug(path)
     logger.debug(request.path)
     logger.debug(request.args.get('allowed_users', None))
     logger.debug(request.args.get('denied_users', None))
