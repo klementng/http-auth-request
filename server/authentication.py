@@ -4,6 +4,7 @@ Module containing classes that handle authentication.
 
 import json
 import requests
+import flask
 import logging
 
 from dataclasses_json import dataclass_json, Undefined, CatchAll
@@ -14,7 +15,6 @@ import server.users
 from server.shared import ConfigurationError
 
 logger = logging.getLogger(__name__)
-
 
 @dataclass_json(undefined=Undefined.INCLUDE)
 @dataclass
@@ -48,7 +48,7 @@ class AuthenticationUpstream:
     def __post_init__(self):
         self.method = self.method.upper()
 
-    def login(self, username, password):
+    def login(self, username, password, request_headers:dict=None):
         logger.debug(f"{username} is logging in upstream at {self.url}")
 
         kw = self.to_json().replace(
@@ -57,7 +57,13 @@ class AuthenticationUpstream:
             "<<password>>", password
         )
 
-        kw = json.loads(kw)
+        kw:dict = json.loads(kw)
+
+        if kw["headers"] != None:
+            for k in kw["headers"].pop("forward_request_headers_list",[]):
+                if k in request_headers:
+                    logger.debug(f"Forwarding '{k}' header to upstream server")
+                    kw['headers'].update({k:request_headers[k]})
 
         if "kwargs" in kw:
             kw.update(kw.pop("kwargs"))
@@ -139,7 +145,7 @@ class AuthenticationModule:
         else:
             return username in self.users
 
-    def login(self, username, password):
+    def login(self, username, password, request_headers:dict=None):
         """Login to server
 
         Processes the login request using username and password locally or 
@@ -160,14 +166,14 @@ class AuthenticationModule:
         success = False
 
         if self.mode == "upstream":
-            status_code = self.upstream.login(username, password)
+            status_code = self.upstream.login(username, password, request_headers)
             success = True if status_code == 200 else False
 
         elif self.mode == "local":
             success = server.users.verify_password(username, password)
 
         elif self.mode == "dynamic":
-            status_code = self.upstream.login(username, password)
+            status_code = self.upstream.login(username, password, request_headers)
             success = True if status_code == 200 else server.users.verify_password(username, password)
 
         if success and self.is_user_part_of_group(username):

@@ -10,6 +10,7 @@ Typical usage example:
 import base64
 import logging
 import os
+import copy
 import ruamel.yaml
 import shutil
 import waitress
@@ -27,11 +28,13 @@ CACHE_TTL = float(os.getenv("CACHE_TTL","60"))
 if SETTINGS_PATH == None:
     raise EnvironmentError("SETTINGS_PATH must be set")
 
+MODULES = None
+SETTINGS = None
+SETTINGS_MTIME = os.stat(SETTINGS_PATH).st_mtime
+
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
-modules = None
-settings = None
 
 if not os.path.exists(SETTINGS_PATH):
 
@@ -44,23 +47,29 @@ if not os.path.exists(SETTINGS_PATH):
     shutil.copy("examples/default.yml", SETTINGS_PATH)
     os.chmod(SETTINGS_PATH, 600)
 
-try:
-    logger.debug("Opening config file")
-    yaml_f = open(SETTINGS_PATH)
-    logger.debug("Parsing YAML config file")
-    config = ruamel.yaml.safe_load(yaml_f)
-    yaml_f.close()
 
-    settings = config["settings"]
-    modules = config["modules"]
+def parse_config():
+    try:
+        logger.debug("Opening config file")
+        yaml_f = open(SETTINGS_PATH)
+        logger.debug("Parsing YAML config file")
+        config = ruamel.yaml.safe_load(yaml_f)
+        yaml_f.close()
 
-    for key in modules.keys():
-        modules[key] = AuthenticationModule.from_dict(modules[key])
+        settings = config["settings"]
+        modules = config["modules"]
 
-except Exception as e:
-    logger.fatal(f"Aborting. Invalid Configuration: {e} ")
-    raise
+        for key in modules.keys():
+            modules[key] = AuthenticationModule.from_dict(modules[key])
 
+        return settings,modules
+
+    except Exception as e:
+        logger.fatal(f"Aborting. Invalid Configuration: {e} ")
+        raise
+
+
+SETTINGS,MODULES = parse_config()
 
 def start(debug_mode: bool = False) -> None:
     """Start the server using waitress
@@ -74,44 +83,67 @@ def start(debug_mode: bool = False) -> None:
     Raises:
         SystemExit: failed to parse config file 
     """
-    global modules
-    global settings
+    global MODULES
+    global SETTINGS
 
     logger.info("Server started!")
 
     if debug_mode == True:
-        app.run(settings["server"]["host"],
-                settings["server"]["port"], debug=True)
+        app.run(SETTINGS["server"]["host"],
+                SETTINGS["server"]["port"], debug=True)
     else:
         waitress.serve(
             app,
-            host=settings["server"]["host"],
-            port=settings["server"]["port"]
+            host=SETTINGS["server"]["host"],
+            port=SETTINGS["server"]["port"]
         )
 
 
-@app.route("/", defaults={"path": "default"}, methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
+@app.route("/", defaults={"path": "/auth"}, methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
 @app.route("/<path:path>", methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
 def main(path):
     """Main flask application"""
 
-    request.path = path
+    global SETTINGS_MTIME
+    global MODULES    
+    global SETTINGS
 
-    if path not in modules:
+    if SETTINGS_MTIME != os.stat(SETTINGS_PATH).st_mtime:
+        logger.info("Changes to settings detected! reloading authentication modules")
+        
+        try:
+            SETTINGS,MODULES = parse_config()
+            SETTINGS_MTIME = os.stat(SETTINGS_PATH).st_mtime
+
+        except:
+            logger.critical("Unable to reload authentication modules!. Check your config!")
+    
+
+    module = request.path if request.path != '/' else "/auth"
+    
+    if  module not in MODULES:
         return abort(404)
 
-    auth_header = request.headers.get("Authorization")
-    if auth_header != None:
-        return process_auth_header(auth_header, path)
+    auth_header = request.headers.get("Authorization", None)
+    allowed_users = request.args.get('allowed_users', None)
+    denied_users = request.args.get('denied_users', None)
 
-    else:
+    if auth_header == None:
         logger.debug("No 'Authorization' header sent. Returning 401")
         return abort(401)
+
+    if allowed_users != None:
+        allowed_users = tuple(allowed_users.split(","))
+    
+    if denied_users != None:
+        denied_users = tuple(denied_users.split(","))
+
+    return process_auth_header(auth_header, module, allowed_users, denied_users)
 
 
 # caching to reduce server load due to burst requests
 @cachetools.func.ttl_cache(ttl=CACHE_TTL)
-def process_auth_header(auth_header: str, group: str) -> Response:
+def process_auth_header(auth_header: str, module: str, allowed_users: tuple = None, denied_users: tuple = None) -> Response:
     """Processes incoming 'Authorization' header
 
     Args:
@@ -129,7 +161,7 @@ def process_auth_header(auth_header: str, group: str) -> Response:
     try:
         method, data = auth_header.split(" ")
         username, password = str(base64.b64decode(data), 'utf-8').split(":", 1)
-        mod = modules[group]
+        mod = MODULES[module]
 
     except KeyError:
         logger.warn(
@@ -141,8 +173,20 @@ def process_auth_header(auth_header: str, group: str) -> Response:
             f"A malformed 'Authorization' header received, Returning 401")
         return abort(401)
 
+    if allowed_users != None and username not in allowed_users:
+        logger.warn(
+            f"User: {username} not in accepted users args: {allowed_users}")        
+        return abort(403)
+    
+    if denied_users != None and username in denied_users:
+        logger.warn(
+            f"User: {username} is denied due to denied_users args: {denied_users}")        
+        return abort(403)
+
+
     if method == "Basic":
-        status_code = mod.login(username, password)
+        logger.debug(request.headers)
+        status_code = mod.login(username, password, request_headers=copy.copy(dict(request.headers)))
 
         if status_code == 200:
             return Response("Success", 200)
@@ -154,7 +198,7 @@ def process_auth_header(auth_header: str, group: str) -> Response:
             return abort(401)
 
     else:
-        logger.warn(f"{method} is not supported. Returning 401")
+        logger.warn(f"http authentication '{method}' is not supported. Returning 401")
         return abort(401)
 
 
@@ -170,7 +214,7 @@ def unauthorized(e: int, msg="Unauthorized") -> Response:
     Returns:
         Response(msg, 401)
     """
-    m = modules.get(request.path)
+    m = MODULES.get(request.path)
 
     if m != None:
         return Response(msg, 401, {'WWW-Authenticate': f'{m.method} realm="{m.realm}"'})

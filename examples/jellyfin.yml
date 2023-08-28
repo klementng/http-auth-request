@@ -5,7 +5,7 @@ settings:
     port: 9999
 
 modules:
-  jellyfin: &jellyfin # i.e. http://localhost:9999/jellyfin
+  /auth/jellyfin: &jellyfin # i.e. http://localhost:9999/auth/jellyfin
     mode: upstream # do the password checking in upstream
 
     method: Basic
@@ -22,7 +22,7 @@ modules:
         Content-Type: application/json
         X-Emby-Authorization: MediaBrowser Client="nginx", Device="server", DeviceId="0", Version="1.0"
   
-  jellyfin/admins: # i.e. http://localhost:9999/jellyfin/admins
+  /auth/jellyfin/admins: # i.e. http://localhost:9999/jellyfin/admins
     <<: *jellyfin
 
     users:

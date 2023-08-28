@@ -87,115 +87,14 @@ sudo docker exec -it http-auth-request server.core start
 sudo docker exec -it http-auth-request server.core kill
 ```
 
-## Examples:
+## Examples :
 
 ### Server
-```yaml
-# This is the default configuration file
-
-settings:
-  server:
-    host: '0.0.0.0' #listening ip address
-    port: 9999      #listening port
-
-modules:
-
-  default: #i.e. http://localhost:9999/ or http://localhost:9999/default
-    mode: local # use local database
-
-    # http authentication parameters
-    method: basic
-    realm: default users
-
-  admin: #i.e. http://localhost:9999/admin
-    mode: local
-    method: basic
-    realm: admin users
-
-    # restrict login to the following usernames:
-    users:
-      - admin
-
-  upstream: #i.e. http://localhost:9999/upstream
-    mode: upstream # do the password checking upstream
-
-    method: basic
-    realm: upstream users
-
-    upstream:
-      # kwargs as follows requests.request() see: https://requests.readthedocs.io/en/latest/api/ 
-      # allow_redirects is set to false by default
-
-      # <<username>> / <<password>> are replaced with user inputs
-
-      method: POST
-      url: https://www.example.com/authenticate
-      data: >-
-        {"Username":"<<username>>","Password":"<<password>>"}
-      headers:
-        Content-Type: application/json
-
-      # json:
-      #   Username: <<username>>
-      #   Password: <<password>>
-      
-      users:
-        - demo
-
-users:
-  # supported password format
-  # text:plaintext_password
-  # algo:iterations:b64(hash)
-  # algo:iterations:b64(salt):b64(hash)
-
-  #user1: text:password123
-  user:  sha256:10000:///////////////////////abc==:8WR8KTAo2P0y9bRMkasWdKxpdBupkNBSLU4X6vz+bSg=
-  admin: sha256:10000:abcdefghijklmnopQRSTUVWXYZ==:UuRV7et/zfAIWowdZswGbCBfArhIheeeVmAXBw7OsWo=
-```
+see [default.yml](examples/default.yml)
 
 ### Nginx
-```nginx
-server {
-
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-
-    server_name www.example.com;
-
-    location /users {
-      internal;
-
-      location /users/default
-      {
-        proxy_pass_request_body off;
-        proxy_set_header Content-Length "";
-        proxy_set_header X-Original-URI $request_uri;
-        proxy_pass http://localhost:9999/default;
-      }
-
-      location /users/admins
-      {
-        proxy_pass_request_body off;
-        proxy_set_header Content-Length "";
-        proxy_set_header X-Original-URI $request_uri;
-        proxy_pass http://localhost:9999/admins;
-      }
-
-    }
-
-    auth_request /users/default;
-
-    location / {
-        try_files $uri $uri/ =404;
-    }
-
-    location /protected {
-        auth_request /users/admins;
-    }
-    
-}
-```
+see [nginx.cong](examples/nginx.conf)
 ### Jellyfin
-![jellyfin.yml](examples/jellyfin.yml)
+see [jellyfin.yml](examples/jellyfin.yml)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

@@ -8,14 +8,14 @@ settings:
 
 modules:
 
-  default: #i.e. http://localhost:9999/ or http://localhost:9999/default
+  /auth: #i.e. http://localhost:9999/auth or http://localhost:9999/ 
     mode: local # use local database
 
     # http authentication parameters
     method: basic
     realm: default users
 
-  admins: #i.e. http://localhost:9999/admin
+  /auth/admin: #i.e. http://localhost:9999/auth/admin
     mode: local
     method: basic
     realm: admin users
@@ -24,11 +24,12 @@ modules:
     users:
       - admin
 
-  upstream: #i.e. http://localhost:9999/upstream
+  /auth/upstream: #i.e. http://localhost:9999/auth/upstream
     mode: upstream # do the password checking upstream
 
     method: basic
     realm: upstream users
+    forward_request_headers: false
 
     upstream:
       # kwargs as follows requests.request() see: https://requests.readthedocs.io/en/latest/api/ 
@@ -42,6 +43,20 @@ modules:
         {"Username":"<<username>>","Password":"<<password>>"}
       headers:
         Content-Type: application/json
+
+        # Forward the following list of request header to upstream server
+        forward_request_headers_list:
+          - X-Forwarded-For
+          - X-Forwarded-Host
+          - X-Forwarded-Method
+          - X-Forwarded-Port
+          - X-Forwarded-Proto
+          - X-Forwarded-Server
+          - X-Forwarded-Ss
+          - X-Forwarded-Uri
+          - X-Original-Method
+          - X-Original-URL
+          - X-Real-IP
         
       # json:
       #   Username: <<username>>
@@ -50,7 +65,7 @@ modules:
       users:
         - demo
 
-  dynamic: #i.e. http://localhost:9999/dynamic
+  /auth/dynamic: #i.e. http://localhost:9999/auth/dynamic
   
     mode: dynamic # check upstream first if fails check local
 
