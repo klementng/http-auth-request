@@ -187,7 +187,7 @@ def process_auth_header(auth_header: str, module: str, allowed_users: tuple = No
 
 
     if method == "Basic":
-        status_code = mod.login(username, password, flask_request=request)
+        status_code = mod.login(username, password, request_headers=request.headers)
 
         if status_code == 200:
             return Response("Success", 200)

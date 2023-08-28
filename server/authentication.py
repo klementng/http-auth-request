@@ -49,7 +49,7 @@ class AuthenticationUpstream:
     def __post_init__(self):
         self.method = self.method.upper()
 
-    def login(self, username, password, flask_request=None):
+    def login(self, username, password, request_headers=None):
         logger.debug(f"{username} is logging in upstream at {self.url}")
 
         kw = self.to_json().replace(
@@ -60,11 +60,11 @@ class AuthenticationUpstream:
 
         kw:dict = json.loads(kw)
 
-        if kw.pop('forward_request_headers') and flask_request != None:
+        if kw.pop('forward_request_headers') and request_headers != None:
             kw.setdefault('headers',{})
-            kw['headers'].update(flask_request.headers)
+            kw['headers'].update(request_headers)
         
-        logger.debug(flask_request)
+        logger.debug(request_headers)
         logger.debug(kw)
 
         if "kwargs" in kw:
@@ -147,7 +147,7 @@ class AuthenticationModule:
         else:
             return username in self.users
 
-    def login(self, username, password, flask_request=None):
+    def login(self, username, password, request_headers=None):
         """Login to server
 
         Processes the login request using username and password locally or 
@@ -168,7 +168,7 @@ class AuthenticationModule:
         success = False
 
         if self.mode == "upstream":
-            status_code = self.upstream.login(username, password, flask_request)
+            status_code = self.upstream.login(username, password, request_headers)
             success = True if status_code == 200 else False
 
         elif self.mode == "local":
