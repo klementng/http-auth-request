@@ -60,7 +60,7 @@ class AuthenticationUpstream:
         kw:dict = json.loads(kw)
 
         if kw["headers"] != None:
-            for k in kw.pop("forward_request_headers_list",[]):
+            for k in kw["headers"].pop("forward_request_headers_list",[]):
                 if k in request_headers:
                     kw['headers'].update({k:request_headers[k]})
 
