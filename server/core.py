@@ -101,6 +101,7 @@ def start(debug_mode: bool = False) -> None:
 @app.route("/", defaults={"path": "default"}, methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
 @app.route("/<path:path>", methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
 def main(path):
+    logger.debug(path)
     """Main flask application"""
         
     global SETTINGS_MTIME
