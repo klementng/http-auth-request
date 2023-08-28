@@ -99,11 +99,10 @@ def start(debug_mode: bool = False) -> None:
 
 
 @app.route("/", defaults={"path": "default"}, methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
-@app.route("/<path:path>", methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
-def main(path):
-    logger.debug(path)
+@app.route("/<path:catch_all>", methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
+def main(catch_all):
     """Main flask application"""
-        
+
     global SETTINGS_MTIME
     global MODULES    
     global SETTINGS
@@ -118,9 +117,13 @@ def main(path):
         except:
             logger.critical("Unable to reload authentication modules!. Check your config!")
 
-    request.path = path
+    logger.debug(catch_all)
+    logger.debug(request.path)
+    logger.debug(request.args.get('allowed_users', None))
+    logger.debug(request.args.get('denied_users', None))
 
-    if path not in MODULES:
+    module = request.path
+    if  module not in MODULES:
         return abort(404)
 
     auth_header = request.headers.get("Authorization", None)
@@ -137,7 +140,7 @@ def main(path):
     if denied_users != None:
         denied_users = tuple(denied_users.split(","))
 
-    return process_auth_header(auth_header, path, allowed_users, denied_users)
+    return process_auth_header(auth_header, module, allowed_users, denied_users)
 
 
 # caching to reduce server load due to burst requests
