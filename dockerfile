@@ -8,4 +8,4 @@ COPY . .
 
 ENV PATH="$PATH:/app/scripts"
 
-CMD ["server.core", "start"]
+CMD ["python3","main.py","server" ,"start"]
