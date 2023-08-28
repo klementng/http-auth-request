@@ -121,7 +121,8 @@ def main(path):
 
     module = request.path if request.path != '/' else "/auth"
     
-    if  module not in MODULES:
+    if module not in MODULES:
+        logger.warning(f'{module} not found')
         return abort(404)
 
     auth_header = request.headers.get("Authorization", None)
