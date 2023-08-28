@@ -38,7 +38,6 @@ class AuthenticationUpstream:
     url: str
     method: str = "POST"
     allow_redirects: bool = False
-    forward_request_headers: bool = False
 
     data: str | None = None
     json: dict | None = None
@@ -60,10 +59,11 @@ class AuthenticationUpstream:
 
         kw:dict = json.loads(kw)
 
-        if kw.pop('forward_request_headers') and request_headers != None:
-            kw.setdefault('headers',{})
-            kw['headers'].update(request_headers)
-        
+        if kw["headers"] != None:
+            for k in kw.pop("forward_request_headers_list",[]):
+                if k in request_headers:
+                    kw['headers'].update({k:request_headers[k]})
+
         logger.debug(request_headers)
         logger.debug(kw)
 

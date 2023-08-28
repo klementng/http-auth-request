@@ -22,7 +22,6 @@ modules:
     mode: upstream # do the password checking in upstream
     method: basic
     realm: upstream users
-    forward_request_headers: true
 
     upstream:
       url: https://demo.jellyfin.org/stable/Users/authenticatebyname
@@ -34,6 +33,20 @@ modules:
       headers:
         Content-Type: application/json
         X-Emby-Authorization: MediaBrowser Client="nginx", Device="server", DeviceId="0", Version="1.0.0"
+
+        # Forward the following list of request header to upstream server
+        forward_request_headers_list:
+          - X-Forwarded-For
+          - X-Forwarded-Host
+          - X-Forwarded-Method
+          - X-Forwarded-Port
+          - X-Forwarded-Proto
+          - X-Forwarded-Server
+          - X-Forwarded-Ss
+          - X-Forwarded-Uri
+          - X-Original-Method
+          - X-Original-URL
+          - X-Real-IP
 
     users:
     - demo
