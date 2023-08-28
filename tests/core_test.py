@@ -56,27 +56,27 @@ class TestServerAuthentication(unittest.TestCase):
 
     def test_admin_success(self):
         headers = self._build_header(self.admin_user,self.admin_pw)
-        res = self.client.get("/admin", headers=headers)
+        res = self.client.get("/auth/admin", headers=headers)
         self.assertEqual(res.status_code, 200)
     
     def test_admin_failure(self):
         headers = self._build_header("er","12312312312")
-        res = self.client.get("/admin", headers=headers)
+        res = self.client.get("/auth/admin", headers=headers)
         self.assertEqual(res.status_code, 401)
     
     def test_admin_restricted(self):
         headers = self._build_header(self.default_user,self.default_pw)
-        res = self.client.get("/admin", headers=headers)
+        res = self.client.get("/auth/admin", headers=headers)
         self.assertEqual(res.status_code, 403)
 
     def test_upstream_success(self):
         headers = self._build_header('demo','')
-        res = self.client.get("/upstream", headers=headers)
+        res = self.client.get("/auth/upstream", headers=headers)
         self.assertEqual(res.status_code, 200)
     
     def test_upstream_failure(self):
         headers = self._build_header('demo','1234')
-        res = self.client.get("/upstream", headers=headers)
+        res = self.client.get("/auth/upstream", headers=headers)
         self.assertEqual(res.status_code, 401)
     
 

@@ -36,17 +36,17 @@ modules:
 
         # Forward the following list of request header to upstream server
         forward_request_headers_list:
-          - X-Forwarded-For
-          - X-Forwarded-Host
-          - X-Forwarded-Method
-          - X-Forwarded-Port
-          - X-Forwarded-Proto
-          - X-Forwarded-Server
-          - X-Forwarded-Ss
-          - X-Forwarded-Uri
-          - X-Original-Method
-          - X-Original-URL
-          - X-Real-IP
+        - X-Forwarded-For
+        - X-Forwarded-Host
+        - X-Forwarded-Method
+        - X-Forwarded-Port
+        - X-Forwarded-Proto
+        - X-Forwarded-Server
+        - X-Forwarded-Ss
+        - X-Forwarded-Uri
+        - X-Original-Method
+        - X-Original-URL
+        - X-Real-IP
 
     users:
     - demo

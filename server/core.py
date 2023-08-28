@@ -99,7 +99,7 @@ def start(debug_mode: bool = False) -> None:
         )
 
 
-@app.route("/", defaults={"path": "default"}, methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
+@app.route("/", defaults={"path": "/auth"}, methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
 @app.route("/<path:path>", methods=['POST', 'GET', "HEAD", "PUT", "DELETE"])
 def main(path):
     """Main flask application"""
@@ -117,13 +117,10 @@ def main(path):
 
         except:
             logger.critical("Unable to reload authentication modules!. Check your config!")
+    
 
-    logger.debug(path)
-    logger.debug(request.path)
-    logger.debug(request.args.get('allowed_users', None))
-    logger.debug(request.args.get('denied_users', None))
-
-    module = request.path
+    module = request.path if request.path != '/' else "/auth"
+    
     if  module not in MODULES:
         return abort(404)
 

@@ -62,10 +62,8 @@ class AuthenticationUpstream:
         if kw["headers"] != None:
             for k in kw["headers"].pop("forward_request_headers_list",[]):
                 if k in request_headers:
+                    logger.debug(f"Forwarding '{k}' header to upstream server")
                     kw['headers'].update({k:request_headers[k]})
-
-        logger.debug(request_headers)
-        logger.debug(kw)
 
         if "kwargs" in kw:
             kw.update(kw.pop("kwargs"))
