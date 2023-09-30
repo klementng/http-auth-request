@@ -5,7 +5,6 @@ import os
 os.environ["CONFIG_DIR"] = "./tests/data"
 os.environ["SETTINGS_PATH"] = "./tests/data/settings.yml"
 os.environ["USERS_DB_PATH"] = "./tests/data/settings.yml"
-os.environ["USERS_DB_MODE"] = "YAML"
 
 
 from server.core import app

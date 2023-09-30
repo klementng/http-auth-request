@@ -23,7 +23,6 @@ services:
             - CONFIG_DIR=/config
             - SETTINGS_PATH=/config/settings.yml
             - USER_DB_PATH=/config/settings.yml
-            - USER_DB_MODE=YAML
         volumes:
             - /path/to/data:/config
         ports:
@@ -60,12 +59,6 @@ Docker environmental variables:
     <td>Path to settings file</td>
     <td>Any</td>
     <td>${CONFIG_DIR}/settings.yml</td>
-  </tr>
-  <tr>
-    <td>USERS_DB_MODE</td>
-    <td>Store users using yaml file or sqlite3 database.</td>
-    <td>YAML | SQLITE3</td>
-    <td>YAML</td>
   </tr>
   <tr>
     <td>USERS_DB_PATH</td>
