@@ -39,7 +39,7 @@ SETTINGS_MTIME = os.stat(SETTINGS_PATH).st_mtime
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config["SECRET_KEY"] = secrets.token_hex(16)
-
+app.config['SESSION_COOKIE_DOMAIN'] = os.getenv("FLASK_SESSION_COOKIE_DOMAIN", "")
 
 if not os.path.exists(SETTINGS_PATH):
 
