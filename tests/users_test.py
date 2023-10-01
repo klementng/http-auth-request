@@ -1,9 +1,18 @@
 import unittest
 import os
 import importlib
+import secrets
 
 os.environ["CONFIG_DIR"] = "./tests/data"
 os.environ["SETTINGS_PATH"] = "./tests/data/settings.yml"
+
+os.environ["CACHE_TTL"] = os.getenv("CACHE_TTL", '60')
+os.environ["LOG_LEVEL"] = os.getenv("LOG_LEVEL", "DEBUG")
+
+os.environ["FLASK_SESSION_COOKIE_DOMAIN"] = os.getenv("FLASK_SESSION_COOKIE_DOMAIN","")
+os.environ["FLASK_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY",secrets.token_hex(16))
+
+
 import server.users
 
 class TestUserModule(unittest.TestCase):

@@ -2,13 +2,13 @@ import functools
 
 from frozendict import frozendict
 
-class ConfigurationError(Exception):
+class ConfigurationError(SystemExit):
     pass
 
 
 def freezeargs(func):
     """
-    Transform mutable dictionnary
+    Transform mutable dictionary
     Into immutable
     Useful to be compatible with cache
     """

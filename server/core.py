@@ -24,12 +24,9 @@ from flask import Flask, Response, request, abort, session
 from server.authentication import AuthenticationModule
 from server.shared import ConfigurationError, freezeargs
 
-CONFIG_DIR = os.getenv("CONFIG_DIR")
-SETTINGS_PATH = os.getenv("SETTINGS_PATH")
-CACHE_TTL = float(os.getenv("CACHE_TTL", "60"))
-
-if SETTINGS_PATH == None:
-    raise EnvironmentError("SETTINGS_PATH must be set")
+CONFIG_DIR = os.environ["CONFIG_DIR"]
+SETTINGS_PATH = os.environ["SETTINGS_PATH"]
+CACHE_TTL = float(os.environ["CACHE_TTL"])
 
 MODULES: dict = None  # type: ignore
 SETTINGS: dict = None  # type: ignore
@@ -38,8 +35,14 @@ SETTINGS_MTIME = os.stat(SETTINGS_PATH).st_mtime
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
-app.config["SECRET_KEY"] = secrets.token_hex(16)
-app.config['SESSION_COOKIE_DOMAIN'] = os.getenv("FLASK_SESSION_COOKIE_DOMAIN", "")
+
+
+for k in os.environ.keys():
+    if k.startswith("FLASK_"):
+        app.config[k.replace("FLASK_","")] = os.environ[k]
+
+# app.config["SECRET_KEY"] = secrets.token_hex(16)
+# app.config['SESSION_COOKIE_DOMAIN'] = os.getenv("FLASK_SESSION_COOKIE_DOMAIN", "")
 
 if not os.path.exists(SETTINGS_PATH):
 
@@ -65,7 +68,7 @@ def parse_config():
         modules = config["modules"]
 
         for key in modules.keys():
-            modules[key] = AuthenticationModule.from_dict(modules[key])
+            modules[key] = AuthenticationModule.from_dict(modules[key]) # type: ignore
 
         return settings, modules
 
@@ -245,7 +248,7 @@ def unauthorized(e: int, msg="Unauthorized") -> Response:
 @app.errorhandler(403)
 def forbidden(e, msg="Forbidden <a>") -> Response:
     """
-    Send a forrbbien response. This occurs when user is logged in but not authorized
+    Send a forbidden response. This occurs when user is logged in but not authorized
 
     Args:
         e: status code

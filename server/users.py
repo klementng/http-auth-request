@@ -8,7 +8,6 @@ This modules provide 4 basic function:
 
 """
 import os
-import sqlite3
 import base64
 import hashlib
 import secrets
