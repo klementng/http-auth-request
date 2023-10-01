@@ -18,6 +18,7 @@ import secrets
 import cachetools
 import cachetools.func
 
+from cryptography.fernet import Fernet
 from frozendict import frozendict
 from flask import Flask, Response, request, abort, session
 
@@ -36,6 +37,7 @@ SETTINGS_MTIME = os.stat(SETTINGS_PATH).st_mtime
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
+fernet = Fernet(Fernet.generate_key())
 
 for k in os.environ.keys():
     if k.startswith("FLASK_"):
@@ -136,16 +138,22 @@ def main(path):
         logger.warning(f'{module} not found')
         return abort(404)
 
-    auth_header = request.headers.get("Authorization", session.get("Authorization", None))
+    auth_header = request.headers.get("Authorization")
+    encrypted_auth_header = session.get("encrypted_auth_header")
 
     if auth_header == None:
-        logger.debug("No 'Authorization' header sent. Returning 401")
-        return abort(401)
-    
-    if session.get("Authorization") == None:
-        session['Authorization'] = auth_header
-        session.modified = True
-    
+
+        if encrypted_auth_header != None:
+            auth_header = str(fernet.decrypt(encrypted_auth_header.encode()),'utf-8')
+        else:
+            logger.debug("No 'Authorization' header sent. Returning 401")
+            return abort(401)
+
+    else:
+        if encrypted_auth_header == None:
+            session['encrypted_auth_header'] = str(fernet.encrypt(auth_header.encode()),'utf-8')
+            session.modified = True
+        
     return process_auth_header(auth_header, module, request.args) # type: ignore
 
 
