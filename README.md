@@ -91,9 +91,9 @@ Docker environmental variables:
 
 ### Managing Users
 ```bash
-sudo docker run --rm -it http-auth-request server.users add <username>
-sudo docker run --rm -it http-auth-request server.users edit <username>
-sudo docker run --rm -it http-auth-request server.users delete <username>
+sudo docker exec -it http-auth-request server.users add <username>
+sudo docker exec -it http-auth-request server.users edit <username>
+sudo docker exec -it http-auth-request server.users delete <username>
 ```
 
 ## Examples :
