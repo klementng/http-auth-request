@@ -19,9 +19,6 @@ services:
     http-auth-request:
         image: ghcr.io/klementng/http-auth-request:latest
         container_name: http-auth-request
-    http-auth-request:
-        image: ghcr.io/klementng/http-auth-request:latest
-        container_name: http-auth-request
         environment:
             - CONFIG_DIR=/config
             - SETTINGS_PATH=/config/settings.yml
