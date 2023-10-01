@@ -6,6 +6,7 @@ import json
 import requests
 import flask
 import logging
+import secrets
 
 from dataclasses_json import dataclass_json, Undefined, CatchAll
 from dataclasses import dataclass, KW_ONLY
@@ -98,7 +99,7 @@ class AuthenticationModule:
     realm: str = ''
 
     _: KW_ONLY
-    upstream: AuthenticationUpstream | None = None
+    upstream: AuthenticationUpstream | None = None # type: ignore
     users: list[str] | None = None
 
     def __post_init__(self):

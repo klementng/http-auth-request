@@ -27,7 +27,7 @@ yaml_parser.width = 4096
 CONFIG_DIR = os.environ["CONFIG_DIR"]
 SETTINGS_PATH = os.environ["SETTINGS_PATH"]
 
-USERS_DB_PATH = os.getenv("USERS_DB_PATH")
+USERS_DB_PATH = os.getenv("USERS_DB_PATH",SETTINGS_PATH)
 os.makedirs(os.path.dirname(USERS_DB_PATH), exist_ok=True)
 
 
@@ -229,7 +229,7 @@ def add_user(*args, **kwargs):
         return True, f"Success: user '{args[0]}' added!"
 
 
-def edit_user(username: str, new_password: str, old_password: str = None, verify: bool = False, **kwargs):
+def edit_user(username: str, new_password: str, old_password: str| None = None, verify: bool = False, **kwargs):
     """
     Edit a user in the database 
 
@@ -257,7 +257,7 @@ def edit_user(username: str, new_password: str, old_password: str = None, verify
         if verify == True and old_password == None:
             msg = "Failed: when verify=True, old password must be given"
 
-        elif verify == True and verify_password(username, old_password) == False:
+        elif verify == True and verify_password(username, old_password) == False: # type: ignore
             msg = "Failed: verify=True, password mismatch"
 
         elif _get_password(username) == None:
@@ -279,7 +279,7 @@ def edit_user(username: str, new_password: str, old_password: str = None, verify
         return False, str(e)
 
 
-def delete_user(username: str, old_password: str = None, verify: bool = False):
+def delete_user(username: str, old_password: str | None = None, verify: bool = False):
     """
     Delete a user in the database 
 
@@ -299,7 +299,7 @@ def delete_user(username: str, old_password: str = None, verify: bool = False):
         if verify == True and old_password == None:
             msg = "Failed: when verify=True, old password must be given"
 
-        elif verify == True and verify_password(username, old_password) == False:
+        elif verify == True and verify_password(username, old_password) == False: # type: ignore
             msg = "Failed: verify=True, password mismatch"
 
         else:

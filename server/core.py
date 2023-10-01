@@ -14,26 +14,31 @@ import copy
 import ruamel.yaml
 import shutil
 import waitress
+import secrets
+import cachetools
 import cachetools.func
 
-from flask import Flask, Response, request, abort
+from frozendict import frozendict
+from flask import Flask, Response, request, abort, session
 
 from server.authentication import AuthenticationModule
-from server.shared import ConfigurationError
+from server.shared import ConfigurationError, freezeargs
 
 CONFIG_DIR = os.getenv("CONFIG_DIR")
 SETTINGS_PATH = os.getenv("SETTINGS_PATH")
-CACHE_TTL = float(os.getenv("CACHE_TTL","60"))
+CACHE_TTL = float(os.getenv("CACHE_TTL", "60"))
 
 if SETTINGS_PATH == None:
     raise EnvironmentError("SETTINGS_PATH must be set")
 
-MODULES = None
-SETTINGS = None
+MODULES: dict = None  # type: ignore
+SETTINGS: dict = None  # type: ignore
 SETTINGS_MTIME = os.stat(SETTINGS_PATH).st_mtime
+
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
+app.config["SECRET_KEY"] = secrets.token_hex(16)
 
 
 if not os.path.exists(SETTINGS_PATH):
@@ -62,14 +67,15 @@ def parse_config():
         for key in modules.keys():
             modules[key] = AuthenticationModule.from_dict(modules[key])
 
-        return settings,modules
+        return settings, modules
 
     except Exception as e:
         logger.fatal(f"Aborting. Invalid Configuration: {e} ")
-        raise
+        raise ConfigurationError(e)
 
 
-SETTINGS,MODULES = parse_config()
+SETTINGS, MODULES = parse_config()
+
 
 def start(debug_mode: bool = False) -> None:
     """Start the server using waitress
@@ -105,45 +111,44 @@ def main(path):
     """Main flask application"""
 
     global SETTINGS_MTIME
-    global MODULES    
+    global MODULES
     global SETTINGS
 
     if SETTINGS_MTIME != os.stat(SETTINGS_PATH).st_mtime:
-        logger.info("Changes to settings detected! reloading authentication modules")
-        
+        logger.info(
+            "Changes to settings detected! reloading authentication modules")
+
         try:
-            SETTINGS,MODULES = parse_config()
+            SETTINGS, MODULES = parse_config()
             SETTINGS_MTIME = os.stat(SETTINGS_PATH).st_mtime
 
         except:
-            logger.critical("Unable to reload authentication modules!. Check your config!")
-    
+            logger.critical(
+                "Unable to reload authentication modules!. Check your config!")
 
     module = request.path if request.path != '/' else "/auth"
-    
-    if  module not in MODULES:
+    request.path = module
+
+    if module not in MODULES:
         return abort(404)
 
-    auth_header = request.headers.get("Authorization", None)
-    allowed_users = request.args.get('allowed_users', None)
-    denied_users = request.args.get('denied_users', None)
+    auth_header = request.headers.get(
+        "Authorization", session.get("Authorization", None))
 
     if auth_header == None:
         logger.debug("No 'Authorization' header sent. Returning 401")
         return abort(401)
-
-    if allowed_users != None:
-        allowed_users = tuple(allowed_users.split(","))
     
-    if denied_users != None:
-        denied_users = tuple(denied_users.split(","))
-
-    return process_auth_header(auth_header, module, allowed_users, denied_users)
+    else:
+        session['Authorization'] = auth_header
+        session.modified = True
+        return process_auth_header(auth_header, module, request.args) # type: ignore
 
 
 # caching to reduce server load due to burst requests
+@freezeargs
 @cachetools.func.ttl_cache(ttl=CACHE_TTL)
-def process_auth_header(auth_header: str, module: str, allowed_users: tuple = None, denied_users: tuple = None) -> Response:
+def process_auth_header(auth_header: str, module: str, args: frozendict) -> Response:
     """Processes incoming 'Authorization' header
 
     Args:
@@ -173,20 +178,31 @@ def process_auth_header(auth_header: str, module: str, allowed_users: tuple = No
             f"A malformed 'Authorization' header received, Returning 401")
         return abort(401)
 
-    if allowed_users != None and username not in allowed_users:
-        logger.warn(
-            f"User: {username} not in accepted users args: {allowed_users}")        
-        return abort(403)
-    
-    if denied_users != None and username in denied_users:
-        logger.warn(
-            f"User: {username} is denied due to denied_users args: {denied_users}")        
-        return abort(403)
+    allowed_users = args.get('allowed_users')
+    denied_users = args.get('denied_users')
 
+    if allowed_users != None:
+        allowed_users = allowed_users.split(",")
+
+        if username not in allowed_users:
+            logger.warn(
+                f"User: {username} not in allowed_users arg: {allowed_users}")
+            return abort(403)
+
+    if denied_users != None:
+        denied_users = denied_users.split(",")
+
+        if username in denied_users:
+            logger.warn(
+                f"User: {username} in denied_users arg: {allowed_users}")
+            return abort(403)
 
     if method == "Basic":
-        logger.debug(request.headers)
-        status_code = mod.login(username, password, request_headers=copy.copy(dict(request.headers)))
+        status_code = mod.login(
+            username,
+            password,
+            request_headers=copy.copy(dict(request.headers))
+        )
 
         if status_code == 200:
             return Response("Success", 200)
@@ -198,7 +214,8 @@ def process_auth_header(auth_header: str, module: str, allowed_users: tuple = No
             return abort(401)
 
     else:
-        logger.warn(f"http authentication '{method}' is not supported. Returning 401")
+        logger.warn(
+            f"http authentication '{method}' is not supported. Returning 401")
         return abort(401)
 
 
@@ -221,7 +238,7 @@ def unauthorized(e: int, msg="Unauthorized") -> Response:
 
     else:
         logger.warn(
-            f"{request.path} is not defined. Check your configs!!!, using default")
+            f"{request.path} is not defined. Check your configs!!!, using default /auth")
         return Response(msg, 401, {'WWW-Authenticate': f'Basic'})
 
 
