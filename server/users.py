@@ -8,7 +8,6 @@ This modules provide 4 basic function:
 
 """
 import os
-import sqlite3
 import base64
 import hashlib
 import secrets
@@ -20,75 +19,31 @@ from server.shared import ConfigurationError
 
 logger = logging.getLogger(__name__)
 
-yaml = ruamel.yaml.YAML()
-yaml.preserve_quotes = True
-yaml.width = 4096
+yaml_parser = ruamel.yaml.YAML()
+yaml_parser.preserve_quotes = True
+yaml_parser.width = 4096
 
 CONFIG_DIR = os.environ["CONFIG_DIR"]
 SETTINGS_PATH = os.environ["SETTINGS_PATH"]
 
-USERS_DB_MODE = os.getenv("USERS_DB_MODE", 'YAML').upper()
-USERS_DB_PATH = os.getenv("USERS_DB_PATH")
-
-if USERS_DB_MODE not in ['YAML', "SQLITE3"]:
-    raise EnvironmentError("USERS_DB_MODE can only be 'YAML' or 'SQLITE3'")
-
-
-if USERS_DB_PATH == None:
-    if USERS_DB_MODE == "SQLITE3":
-        USERS_DB_PATH = os.path.join(CONFIG_DIR, "users.db")
-
-    if USERS_DB_MODE == 'YAML':
-        USERS_DB_PATH = SETTINGS_PATH
-
+USERS_DB_PATH = os.getenv("USERS_DB_PATH",SETTINGS_PATH)
 os.makedirs(os.path.dirname(USERS_DB_PATH), exist_ok=True)
 
 
-def _load_file() -> dict | tuple[sqlite3.Connection, sqlite3.Cursor]:
-    """
-    Load the users database from file
+def _load_file() -> dict:
 
-    Returns:
-        YAML mode: returns dictionary object of parsed yaml file with key 'users' set
-        SQLITE3 mode: return a sqlite3.Connection, sqlite3.Cursor
+    with open(USERS_DB_PATH) as f:
+        data = yaml_parser.load(f)
 
-    Raises:
-        ConfigurationError: users is not defined properly in YAML file
-        ScannerError: Failed to parse YAML file
-        sqlite3.DatabaseError: unable to connect to database
-    """
+        if data == None or data.get('users') == None:
+            data = {}
+            data.setdefault('users', {})
 
-    if USERS_DB_MODE == 'YAML':
+        if not isinstance(data.get('users'), dict):
+            logger.fatal("Expected 'users' to be of dictionary type")
+            raise ConfigurationError("Expected 'users' to be of dictionary type")
 
-        with open(USERS_DB_PATH) as f:
-            data = yaml.load(f)
-
-            if data == None:
-                data = {}
-                data.setdefault('users', {})
-
-            if data.get('users') == None:
-                data['users'] = {}
-
-            if not isinstance(data.get('users'), dict):
-                logger.critical("'users' is not a dictionary")
-                raise ConfigurationError("'users' is not a dictionary")
-
-        return data
-
-    if USERS_DB_MODE == 'SQLITE3':
-        con = sqlite3.connect(USERS_DB_PATH)
-        sql = """
-            CREATE TABLE IF NOT EXISTS users (
-                username TEXT PRIMARY KEY,
-                password TEXT
-            ) WITHOUT ROWID;
-        """
-        cur = con.cursor()
-        cur.execute(sql)
-        con.commit()
-
-        return con, cur
+    return data
 
 
 def _get_password(username: str) -> str:
@@ -97,24 +52,11 @@ def _get_password(username: str) -> str:
 
     Returns:
         password or hash string
-
-    Raises:
-        ConfigurationError: users is not defined properly in YAML file
-        ScannerError: Failed to parse YAML file
-        sqlite3.DatabaseError: unable to connect to database
     """
-    if USERS_DB_MODE == 'YAML':
-        data = _load_file()
-        users = data['users']
+    data = _load_file()
+    users = data['users']
 
-        return users.get(username)
-
-    if USERS_DB_MODE == 'SQLITE3':
-        con, cur = _load_file()
-        sql = "SELECT password FROM users WHERE username=:username"
-        res = cur.execute(sql, {"username": username}).fetchone()
-
-        return res[0] if res != None else res
+    return users.get(username)
 
 
 def _update_users(username: str, password: str, algo: str = "sha256", salt_bytes: int = 16, iterations: int = 10000) -> bool:
@@ -130,11 +72,7 @@ def _update_users(username: str, password: str, algo: str = "sha256", salt_bytes
 
     Returns:
         True
-
-    Raises:
-        ConfigurationError: users is not defined properly in YAML file
-        ScannerError: Failed to parse YAML file
-        sqlite3.DatabaseError: unable to connect to database
+    
     """
     if algo in ['text', 'txt']:
         pw_str = f'text:{password}'
@@ -147,31 +85,11 @@ def _update_users(username: str, password: str, algo: str = "sha256", salt_bytes
             algo, b_pass, b_salt, iterations)
         pw_str = f'{algo}:{iterations}:{b64str_salt}:{b64str_hash}'
 
-    if USERS_DB_MODE == 'YAML':
-        data = _load_file()
-        data['users'].update({username: pw_str})
+    data = _load_file()
+    data['users'].update({username: pw_str})
 
-        with open(USERS_DB_PATH, 'w') as f:
-            yaml.dump(data, f)
-
-    elif USERS_DB_MODE == 'SQLITE3':
-        con, cur = _load_file()
-        sql = """
-            INSERT INTO users 
-            VALUES(:username,:password) 
-            ON CONFLICT(username) 
-            DO UPDATE SET 
-            password=:password
-            WHERE 
-            username=:username
-        """
-
-        cur.execute(sql,
-                    {
-                        "username": username,
-                        "password": pw_str
-                    })
-        con.commit()
+    with open(USERS_DB_PATH, 'w') as f:
+        yaml_parser.dump(data, f)
 
     return True
 
@@ -189,32 +107,16 @@ def _delete_user(username: str) -> bool:
     Raises:
         ConfigurationError: users is not defined properly in YAML file
         ScannerError: Failed to parse YAML file
-        sqlite3.DatabaseError: unable to connect to database
     """
 
-    if USERS_DB_MODE == 'YAML':
-        data = _load_file()
-        pw = data['users'].pop(username, None)
+    data = _load_file()
+    pw = data['users'].pop(username, None)
 
-        if pw == None:
-            return False
+    if pw == None:
+        return False
 
-        with open(USERS_DB_PATH, 'w') as f:
-            yaml.dump(data, f)
-
-    if USERS_DB_MODE == 'SQLITE3':
-        con, cur = _load_file()
-        sql = """
-            DELETE FROM users
-            WHERE
-            username=:username;
-        """
-
-        cur.execute(sql, {
-            "username": username
-        }
-        )
-        con.commit()
+    with open(USERS_DB_PATH, 'w') as f:
+        yaml_parser.dump(data, f)
 
     return True
 
@@ -326,7 +228,7 @@ def add_user(*args, **kwargs):
         return True, f"Success: user '{args[0]}' added!"
 
 
-def edit_user(username: str, new_password: str, old_password: str = None, verify: bool = False, **kwargs):
+def edit_user(username: str, new_password: str, old_password: str| None = None, verify: bool = False, **kwargs):
     """
     Edit a user in the database 
 
@@ -354,7 +256,7 @@ def edit_user(username: str, new_password: str, old_password: str = None, verify
         if verify == True and old_password == None:
             msg = "Failed: when verify=True, old password must be given"
 
-        elif verify == True and verify_password(username, old_password) == False:
+        elif verify == True and verify_password(username, old_password) == False: # type: ignore
             msg = "Failed: verify=True, password mismatch"
 
         elif _get_password(username) == None:
@@ -376,7 +278,7 @@ def edit_user(username: str, new_password: str, old_password: str = None, verify
         return False, str(e)
 
 
-def delete_user(username: str, old_password: str = None, verify: bool = False):
+def delete_user(username: str, old_password: str | None = None, verify: bool = False):
     """
     Delete a user in the database 
 
@@ -396,7 +298,7 @@ def delete_user(username: str, old_password: str = None, verify: bool = False):
         if verify == True and old_password == None:
             msg = "Failed: when verify=True, old password must be given"
 
-        elif verify == True and verify_password(username, old_password) == False:
+        elif verify == True and verify_password(username, old_password) == False: # type: ignore
             msg = "Failed: verify=True, password mismatch"
 
         else:

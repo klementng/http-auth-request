@@ -4,12 +4,10 @@ Module containing classes that handle authentication.
 
 import json
 import requests
-import flask
 import logging
 
 from dataclasses_json import dataclass_json, Undefined, CatchAll
 from dataclasses import dataclass, KW_ONLY
-
 
 import server.users
 from server.shared import ConfigurationError
@@ -48,16 +46,16 @@ class AuthenticationUpstream:
     def __post_init__(self):
         self.method = self.method.upper()
 
-    def login(self, username, password, request_headers:dict=None):
+    def login(self, username, password, request_headers:dict=None): # type: ignore
         logger.debug(f"{username} is logging in upstream at {self.url}")
 
-        kw = self.to_json().replace(
+        kw = self.to_json().replace( # type: ignore
             "<<username>>", username
         ).replace(
             "<<password>>", password
         )
 
-        kw:dict = json.loads(kw)
+        kw:dict = json.loads(kw) # type: ignore
 
         if kw["headers"] != None:
             for k in kw["headers"].pop("forward_request_headers_list",[]):
@@ -98,7 +96,7 @@ class AuthenticationModule:
     realm: str = ''
 
     _: KW_ONLY
-    upstream: AuthenticationUpstream | None = None
+    upstream: AuthenticationUpstream = None # type: ignore
     users: list[str] | None = None
 
     def __post_init__(self):
@@ -145,7 +143,7 @@ class AuthenticationModule:
         else:
             return username in self.users
 
-    def login(self, username, password, request_headers:dict=None):
+    def login(self, username, password, request_headers:dict=None): # type: ignore
         """Login to server
 
         Processes the login request using username and password locally or 

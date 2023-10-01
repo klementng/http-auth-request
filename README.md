@@ -19,11 +19,16 @@ services:
     http-auth-request:
         image: ghcr.io/klementng/http-auth-request:latest
         container_name: http-auth-request
+    http-auth-request:
+        image: ghcr.io/klementng/http-auth-request:latest
+        container_name: http-auth-request
         environment:
             - CONFIG_DIR=/config
             - SETTINGS_PATH=/config/settings.yml
             - USER_DB_PATH=/config/settings.yml
-            - USER_DB_MODE=YAML
+            - CACHE_TTL=60
+            - LOG_LEVEL=INFO
+            - FLASK_SESSION_COOKIE_DOMAIN=.example.com
         volumes:
             - /path/to/data:/config
         ports:
@@ -62,29 +67,33 @@ Docker environmental variables:
     <td>${CONFIG_DIR}/settings.yml</td>
   </tr>
   <tr>
-    <td>USERS_DB_MODE</td>
-    <td>Store users using yaml file or sqlite3 database.</td>
-    <td>YAML | SQLITE3</td>
-    <td>YAML</td>
+    <td>LOG_LEVEL</td>
+    <td>Set Logging</td>
+    <td>INFO, DEBUG, WARNING</td>
+    <td>INFO</td>
   </tr>
+
   <tr>
-    <td>USERS_DB_PATH</td>
+    <td>FLASK_SESSION_COOKIE_DOMAIN</td>
     <td>Path to settings file</td>
     <td>Any</td>
-    <td>yaml: SETTINGS_PATH | sqlite3: ${CONFIG_DIR}/data.db</td>
+    <td>-</td>
   </tr>
+
+  <tr>
+    <td>FLASK_*</td>
+    <td>Flask app config</td>
+    <td>Any</td>
+    <td>-</td>
+  </tr>
+
 </table>  
 
 ### Managing Users
 ```bash
-sudo docker exec -it http-auth-request server.users add <username>
-sudo docker exec -it http-auth-request server.users edit <username>
-sudo docker exec -it http-auth-request server.users delete <username>
-```
-### Starting / killing server
-```bash
-sudo docker exec -it http-auth-request server.core start
-sudo docker exec -it http-auth-request server.core kill
+sudo docker run --rm -it http-auth-request server.users add <username>
+sudo docker run --rm -it http-auth-request server.users edit <username>
+sudo docker run --rm -it http-auth-request server.users delete <username>
 ```
 
 ## Examples :
@@ -93,7 +102,9 @@ sudo docker exec -it http-auth-request server.core kill
 see [default.yml](examples/default.yml)
 
 ### Nginx
-see [nginx.cong](examples/nginx.conf)
+see [auth-request.conf](examples/auth-request.conf)
+and [nginx.conf](examples/nginx.conf)
+
 ### Jellyfin
 see [jellyfin.yml](examples/jellyfin.yml)
 
