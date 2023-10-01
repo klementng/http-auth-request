@@ -132,17 +132,17 @@ def main(path):
     if module not in MODULES:
         return abort(404)
 
-    auth_header = request.headers.get(
-        "Authorization", session.get("Authorization", None))
+    auth_header = request.headers.get("Authorization", session.get("Authorization", None))
 
     if auth_header == None:
         logger.debug("No 'Authorization' header sent. Returning 401")
         return abort(401)
     
-    else:
+    if session.get("Authorization") == None:
         session['Authorization'] = auth_header
         session.modified = True
-        return process_auth_header(auth_header, module, request.args) # type: ignore
+    
+    return process_auth_header(auth_header, module, request.args) # type: ignore
 
 
 # caching to reduce server load due to burst requests
