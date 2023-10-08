@@ -222,8 +222,10 @@ def process_auth_header(auth_header: str, module: str, args: frozendict) -> Resp
         elif status_code == 403:
             return abort(403, f"Forbidden. {username} is not authorized for this area")
 
-        else:
+        elif status_code == 401:
             return abort(401)
+        else:
+            return abort(status_code)
 
     else:
         logger.warn(
@@ -268,9 +270,24 @@ def forbidden(e, msg="Forbidden <a>") -> Response:
     """
     return Response(msg, 403)
 
-
 @app.errorhandler(404)
 def not_found(e, msg="Not Found") -> Response:
+    """
+    Send a not found response. This occurs for misconfiguration in nginx 
+
+    Args:
+        e: status code
+        msg: error message
+
+    Returns:
+        Response(msg, 404)
+    """
+
+    return Response(msg, 404)
+
+
+@app.errorhandler(502)
+def not_found(e, msg="Upstream authentication error") -> Response:
     """
     Send a not found response. This occurs for misconfiguration in nginx 
 
