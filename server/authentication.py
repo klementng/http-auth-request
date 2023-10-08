@@ -66,15 +66,20 @@ class AuthenticationUpstream:
         if "kwargs" in kw:
             kw.update(kw.pop("kwargs"))
 
-        re = requests.request(**kw)
+        try:
+            re = requests.request(**kw)
 
-        if re.status_code == 200:
-            logger.info(f"{username} upstream login successful!")
-            return 200
-        else:
-            logger.warning(
-                f"{username} upstream login failed with code: {re.status_code}, returning 401")
-            return 401
+            if re.status_code == 200:
+                logger.info(f"{username} upstream login successful!")
+                return 200
+            else:
+                logger.warning(
+                    f"{username} upstream login failed with code: {re.status_code}, returning 501")
+                return 501
+        except:
+            return 501
+    
+
 
 
 @dataclass_json
@@ -156,7 +161,7 @@ class AuthenticationModule:
                 password of user who is logging in
 
         Returns:
-            True if successfully, else return false
+            status code 200 or 401 or 403 or 501 
         """
 
         logger.info(f"'{username}' is logging in")
