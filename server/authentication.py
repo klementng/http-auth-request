@@ -10,7 +10,8 @@ from dataclasses_json import dataclass_json, Undefined, CatchAll
 from dataclasses import dataclass, KW_ONLY
 
 import server.users
-from server.shared import ConfigurationError
+
+from shared.exception import ConfigurationError
 
 logger = logging.getLogger(__name__)
 

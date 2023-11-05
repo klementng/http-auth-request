@@ -15,7 +15,7 @@ import logging
 import ruamel.yaml
 
 from ruamel.yaml.scanner import ScannerError
-from server.shared import ConfigurationError
+from shared.exception import ConfigurationError
 
 logger = logging.getLogger(__name__)
 
