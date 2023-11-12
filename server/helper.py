@@ -4,7 +4,7 @@ import ruamel.yaml
 
 from server.authentication import AuthenticationModule
 
-from shared.exception import ConfigurationError
+from server.shared.exception import ConfigurationError
 
 logger = logging.getLogger(__name__)
 

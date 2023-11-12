@@ -11,7 +11,7 @@ from dataclasses import dataclass, KW_ONLY
 
 import server.users
 
-from shared.exception import ConfigurationError
+from server.shared.exception import ConfigurationError
 
 logger = logging.getLogger(__name__)
 

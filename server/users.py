@@ -14,8 +14,7 @@ import secrets
 import logging
 import ruamel.yaml
 
-from ruamel.yaml.scanner import ScannerError
-from shared.exception import ConfigurationError
+from server.shared.exception import ConfigurationError
 
 logger = logging.getLogger(__name__)
 

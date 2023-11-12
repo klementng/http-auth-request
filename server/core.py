@@ -21,7 +21,7 @@ from flask_wtf.csrf import CSRFProtect
 from frozendict import frozendict
 
 from server.helper import parse_config
-from shared.func import freezeargs
+from server.shared.func import freezeargs
 
 CONFIG_DIR = os.environ["CONFIG_DIR"]
 SETTINGS_PATH = os.environ["SETTINGS_PATH"]
