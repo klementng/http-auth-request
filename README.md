@@ -16,9 +16,9 @@ Notes: this project current only support HTTP basic authentication which must be
 ### Docker Compose
 ```yaml
 services:
-    http-auth-request:
-        image: ghcr.io/klementng/http-auth-request:latest
-        container_name: http-auth-request
+    http-basic-auth-request:
+        image: ghcr.io/klementng/http-basic-auth-request:main
+        container_name: http-basic-auth-request
         environment:
             - CONFIG_DIR=/config
             - SETTINGS_PATH=/config/settings.yml
@@ -88,9 +88,9 @@ Docker environmental variables:
 
 ### Managing Users
 ```bash
-sudo docker exec -it http-auth-request server.users add <username>
-sudo docker exec -it http-auth-request server.users edit <username>
-sudo docker exec -it http-auth-request server.users delete <username>
+sudo docker exec -it http-basic-auth-request server.users add <username>
+sudo docker exec -it http-basic-auth-request server.users edit <username>
+sudo docker exec -it http-basic-auth-request server.users delete <username>
 ```
 
 ## Examples :
