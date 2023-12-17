@@ -1,0 +1,2 @@
+class ConfigurationError(SystemExit):
+    pass

@@ -13,6 +13,8 @@ os.environ["FLASK_SESSION_COOKIE_DOMAIN"] = os.getenv("FLASK_SESSION_COOKIE_DOMA
 os.environ["FLASK_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY",secrets.token_hex(16))
 
 import logging
+
+import logging
 import sys
 import time
 import argparse
@@ -24,6 +26,8 @@ import server.core
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(funcName)s() - %(levelname)s - %(message)s', level=os.environ["LOG_LEVEL"])
+
+logger = logging.getLogger(__name__)
 
 if __name__ == '__main__':
 
@@ -43,6 +47,9 @@ if __name__ == '__main__':
                 try:
                     # check if process is running
                     os.kill(int(open('pidfile').read()), 0)
+                    time.sleep(1)
+                    os.remove('pidfile')
+
                 except OSError:
                     os.remove('pidfile')
 
@@ -50,19 +57,19 @@ if __name__ == '__main__':
                 with pidfile.PIDFile("pidfile"):
                     server.core.start()
             except pidfile.AlreadyRunningError:
-                print('Server already running!')
+                logger.critical('Server already running!')
 
         elif args.action == 'kill':
             try:
                 os.kill(int(open('pidfile').read()), 2)
-                print("Sent SIGKILL")
+                logger.info("Sent SIGKILL")
                 time.sleep(3)
 
                 os.kill(int(open('pidfile').read()), 0)
-                print("Not Killed")
+                logger.warning("Not Killed")
 
             except OSError:
-                print("Killed!")
+                logger.info("Killed!")
 
     if args.mode == "users":
         parser.add_argument("action", type=str, help="Select actions", choices=[
@@ -83,7 +90,7 @@ if __name__ == '__main__':
 
             status, msg = server.users.add_user(
                 args.username[0], args.password[0], algo=args.algo, salt_bytes=args.salt_bytes, iterations=args.iterations)
-            print(msg)
+            logger.info(msg)
 
         elif args.action == "edit":
             if args.password == None:
@@ -91,9 +98,9 @@ if __name__ == '__main__':
 
             status, msg = server.users.edit_user(
                 args.username[0], args.password[0], algo=args.algo, salt_bytes=args.salt_bytes, iterations=args.iterations)
-            print(msg)
+            logger.info(msg)
 
         elif args.action == 'delete':
             status, msg = server.users.delete_user(
                 args.username[0], verify=False)
-            print(msg)
+            logger.info(msg)

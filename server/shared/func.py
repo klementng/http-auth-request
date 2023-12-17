@@ -2,10 +2,6 @@ import functools
 
 from frozendict import frozendict
 
-class ConfigurationError(SystemExit):
-    pass
-
-
 def freezeargs(func):
     """
     Transform mutable dictionary
