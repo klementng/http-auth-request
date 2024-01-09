@@ -11,9 +11,9 @@ modules:
     realm: default users
 
     local:
-      db_path: ./tests/data/settings.yml
+      db_path: /config/users.yml
       allowed_roles:
-      - user
+      - default
 
   /auth/admin: #i.e. http://localhost:9999/auth/admin
     mode: local
@@ -22,7 +22,7 @@ modules:
     realm: admin users
 
     local:
-      db_path: ./tests/data/settings.yml
+      db_path: /config/users.yml
       allowed_roles:
       - admin
 
@@ -33,9 +33,9 @@ modules:
     realm: default users
 
     local:
-      db_path: ./tests/data/settings.yml
+      db_path: /config/users.yml
       allowed_roles:
-      - user
+      - default
 
 
   /auth/upstream: #i.e. http://localhost:9999/auth/upstream
@@ -76,10 +76,10 @@ modules:
     realm: dynamic users
 
     local:
-      db_path: ./tests/data/settings.yml
+      db_path: /config/users.yml
       allowed_roles:
       - admin
-      - user
+      - default
 
     upstream:
       url: https://demo.jellyfin.org/stable/Users/authenticatebyname
@@ -105,6 +105,3 @@ modules:
         - X-Original-Method
         - X-Original-URL
         - X-Real-IP
-
-users: {}
-    
