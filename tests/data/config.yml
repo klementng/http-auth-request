@@ -6,36 +6,36 @@ settings:
 modules:
   /auth: #i.e. http://localhost:9999/auth
     mode: local
-    
+
     method: basic
     realm: default users
 
     local:
-      db_path: /config/users.yml
+      db_path: ./tests/data/config.yml
       allowed_roles:
-      - default
+      - user
 
   /auth/admin: #i.e. http://localhost:9999/auth/admin
     mode: local
-    
+
     method: basic
     realm: admin users
 
     local:
-      db_path: /config/users.yml
+      db_path: ./tests/data/config.yml
       allowed_roles:
       - admin
 
   /auth/local: #i.e. http://localhost:9999/auth
     mode: local
-    
+
     method: basic
     realm: default users
 
     local:
-      db_path: /config/users.yml
+      db_path: ./tests/data/config.yml
       allowed_roles:
-      - default
+      - user
 
 
   /auth/upstream: #i.e. http://localhost:9999/auth/upstream
@@ -76,10 +76,10 @@ modules:
     realm: dynamic users
 
     local:
-      db_path: /config/users.yml
+      db_path: ./tests/data/config.yml
       allowed_roles:
       - admin
-      - default
+      - user
 
     upstream:
       url: https://demo.jellyfin.org/stable/Users/authenticatebyname
@@ -105,3 +105,26 @@ modules:
         - X-Original-Method
         - X-Original-URL
         - X-Real-IP
+
+
+users:
+  admin:
+    password: text:::admin
+    roles:
+    - admin
+    - user
+  user:
+    password: text:::abc
+    roles:
+    - user
+  test:
+    password: text:::test
+    roles:
+    - test
+
+  user5:
+    password: sha256:10000:5OLL1k7zJuNsq7bMEReXjA==:FDxHNYOD8fTNILhP1+R1X0x9kTtJdXHSZWUbzQJKVXo=
+    roles:
+    - default
+    - abcd
+    - efeg

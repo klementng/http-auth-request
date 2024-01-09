@@ -21,9 +21,8 @@ services:
         container_name: http-basic-auth-request
         environment:
             - CONFIG_DIR=/config
-            - SETTINGS_PATH=/config/settings.yml
-            - USER_DB_PATH=/config/settings.yml
-            - CACHE_TTL=60
+            - CONFIG_PATH=/config/config.yml
+            - USER_DB_PATH=/config/users.yml
             - LOG_LEVEL=INFO
             - FLASK_SESSION_COOKIE_DOMAIN=.example.com
         volumes:
@@ -51,17 +50,12 @@ Docker environmental variables:
     <td>Any</td>
     <td>/config</td>
   </tr>
+
   <tr>
-    <td>CACHE_TTL</td>
-    <td>Header Cache TTL (seconds) </td>
-    <td>float</td>
-    <td>60</td>
-  </tr>
-  <tr>
-    <td>SETTINGS_PATH</td>
-    <td>Path to settings file</td>
+    <td>CONFIG_PATH</td>
+    <td>Path to config file</td>
     <td>Any</td>
-    <td>${CONFIG_DIR}/settings.yml</td>
+    <td>${CONFIG_DIR}/config.yml</td>
   </tr>
   <tr>
     <td>LOG_LEVEL</td>
@@ -72,7 +66,7 @@ Docker environmental variables:
 
   <tr>
     <td>FLASK_SESSION_COOKIE_DOMAIN</td>
-    <td>Path to settings file</td>
+    <td>Associated cookie domain</td>
     <td>Any</td>
     <td>-</td>
   </tr>
@@ -101,8 +95,5 @@ see [default.yml](examples/default.yml)
 ### Nginx
 see [auth-request.conf](examples/auth-request.conf)
 and [nginx.conf](examples/nginx.conf)
-
-### Jellyfin
-see [jellyfin.yml](examples/jellyfin.yml)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

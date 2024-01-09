@@ -2,9 +2,8 @@ import logging
 import ruamel.yaml
 
 
-from server.authentication import AuthenticationModule
-
-from server.shared.exception import ConfigurationError
+from server.auth.modules import AuthenticationModule
+from server.auth.exception import AuthenticationConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -26,4 +25,4 @@ def parse_config(path:str):
 
     except Exception as e:
         logger.fatal(f"Aborting. Invalid Configuration: {e} ")
-        raise ConfigurationError(e)
+        raise AuthenticationConfigError(e)
