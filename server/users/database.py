@@ -24,7 +24,7 @@ class UserDatabase:
         self.parser.width = 4096
 
         self._raw_dict = {}
-        self._raw_dict.setdefault('users')
+        self._raw_dict.setdefault('users', {})
         self.db = self._raw_dict['users']
         self.mtime = 0
 
