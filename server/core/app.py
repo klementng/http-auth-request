@@ -103,7 +103,6 @@ def process_session(path):
     
     try:
         ses = session.get('auth')
-        print(ses)
         # Check if user is already login to the request path from session
         if ses != None and path != None:
             if path in ses['authorized_path']:
