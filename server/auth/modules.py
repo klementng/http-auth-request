@@ -3,13 +3,12 @@ Module containing classes that handle authentication.
 """
 
 import json
-import requests
 import logging
-
+from dataclasses import KW_ONLY, dataclass
 from typing import Optional
 
-from dataclasses_json import dataclass_json, Undefined, CatchAll
-from dataclasses import dataclass, KW_ONLY
+import requests
+from dataclasses_json import CatchAll, Undefined, dataclass_json
 
 from server.auth.exception import AuthenticationConfigError
 from server.users.database import UserDatabase
@@ -257,13 +256,13 @@ class AuthenticationModule:
         self.log.info(f"'{username}' is logging in")
 
         if self.mode == "local":
-            return self.local.login(username, password)
+            return self.local.login(username, password) # type: ignore
 
         elif self.mode == "upstream":
-            return self.upstream.login(username, password, request_headers)
+            return self.upstream.login(username, password, request_headers) # type: ignore
 
         elif self.mode == "dynamic":
-            if self.upstream.login(username, password, request_headers) == 200:
+            if self.upstream.login(username, password, request_headers) == 200: # type: ignore
                 return 200
             else:
-                return self.local.login(username, password)
+                return self.local.login(username, password) # type: ignore

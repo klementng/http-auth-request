@@ -1,5 +1,6 @@
-import os
 import logging
+import os
+
 import ruamel.yaml
 
 from server.users.object import User

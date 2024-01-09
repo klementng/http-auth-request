@@ -1,10 +1,11 @@
 import base64
+import binascii
 import hashlib
 import secrets
-import binascii
 from typing import Iterable
 
 from server.users.exceptions import *
+
 
 class User:
 
