@@ -27,7 +27,7 @@ modules:
       allowed_roles:
       - admin
 
-  /auth/local: #i.e. http://localhost:9999/auth
+  /auth/local: #i.e. http://localhost:9999/auth/local
     mode: local
     
     method: basic
@@ -70,8 +70,8 @@ modules:
         - X-Original-URL
         - X-Real-IP
 
-  /auth/dynamic: #i.e. http://localhost:9999/auth/upstream
-    mode: dynamic # do the password checking in upstream
+  /auth/dynamic: #i.e. http://localhost:9999/auth/dynamic
+    mode: dynamic # do the password checking in upstream first then locally
 
     method: basic
     realm: dynamic users
