@@ -77,8 +77,9 @@ def main(path):
 
     path = request.path if request.path != '/' else "/auth"
     request.path = path
-
+    
     if 'logout' in request.args:
+        logger.debug('Logging out')
         session.clear()
 
         if request.headers.get("Authorization") == None:
@@ -89,10 +90,6 @@ def main(path):
 
         else:
             return abort(401)
-        
-    elif 'rememberme' in request.args and session.get('auth') != None:
-        session.permanent = True
-        session.modified = True
 
     try:
         module = auth_modules[request.path]
@@ -101,6 +98,13 @@ def main(path):
 
     res = process_auth_session(module,request,session)
     if res != None:
+
+        if 'remember' in request.args:
+            session.permanent = True
+            session.modified = True
+            redirect_loc = request.headers.get("X-Forwarded-Uri", "/")
+            return flask.redirect(redirect_loc)
+
         return res
 
     return process_auth_header(module,request,session)
