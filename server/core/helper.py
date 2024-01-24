@@ -101,6 +101,8 @@ def process_auth_header(module:AuthenticationModule, request:flask.Request, sess
 
     if username == None or password == None:
         return flask.abort(401)
+    else:
+        username = username.strip()
 
     status_code = module.login(
         username,
