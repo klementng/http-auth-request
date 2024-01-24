@@ -29,14 +29,15 @@ app_config, auth_modules = parse_config(config.CONFIG_PATH)
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
-for k in os.environ.keys(): 
+for k in os.environ.keys():
     if k.startswith("FLASK_"):
 
         try:
             app.config[k.replace("FLASK_", "")] = int(os.environ[k])
         except ValueError:
-            if os.environ[k].lower() in ['true' ,'false']:
-                app.config[k.replace("FLASK_", "")] = os.environ[k].lower() == 'true'
+            if os.environ[k].lower() in ['true', 'false']:
+                app.config[k.replace("FLASK_", "")
+                           ] = os.environ[k].lower() == 'true'
             else:
                 app.config[k.replace("FLASK_", "")] = os.environ[k]
 
@@ -58,7 +59,7 @@ def start(debug_mode: bool = False) -> None:
     if debug_mode == True:
         app.run(
             app_config["server"]["host"],
-            app_config["server"]["port"], 
+            app_config["server"]["port"],
             debug=True
         )
     else:
@@ -77,16 +78,17 @@ def main(path):
 
     path = request.path if request.path != '/' else "/auth"
     request.path = path
-    
+
+    redirect_url = request.args.get("redirect_url", "/")
+
     if 'logout' in request.args:
         logger.debug('Logging out')
         session.clear()
 
-        if request.headers.get("Authorization") == None:
-            return Response("Logout successful <br> <a href=/>Home</a>", 401)
-        
-        elif request.headers.get("Authorization") == "Basic Og==":
-            return Response("Logout successful <br> <a href=/>Home</a>", 401)
+        a_h = request.headers.get("Authorization")
+
+        if a_h == None or a_h == "Basic Og==":
+            return Response(f"Logout successful <br> <a href={redirect_url}> Home</a>", 401)
 
         else:
             return abort(401)
@@ -96,18 +98,29 @@ def main(path):
     except KeyError:
         return abort(404)
 
-    res = process_auth_session(module,request,session)
+    res = process_auth_session(module, request, session)
     if res != None:
-
         if 'remember' in request.args:
             session.permanent = True
             session.modified = True
-            redirect_loc = request.headers.get("X-Forwarded-Uri", "/")
-            return flask.redirect(redirect_loc)
+            return flask.redirect(redirect_url)
 
-        return res
+    else:
+        res = process_auth_header(module, request, session)
 
-    return process_auth_header(module,request,session)
+        if redirect_url != None:
+            res.set_data(
+                str(res.data, 'utf-8') +
+                f"""
+                <p>You will be redirected in 5 seconds to {redirect_url} </p>\
+                <script>
+                    var timer = setTimeout(
+                        function() {{window.location='{redirect_url}'}}, 5000);
+                </script>
+                """
+            )
+ 
+    return res
 
 
 @app.errorhandler(401)
@@ -115,19 +128,19 @@ def unauthorized(e: werkzeug.exceptions.Unauthorized) -> Response:
     """
     Send a request for authentication
     """
-    
+
     m = auth_modules.get(request.path)
 
     if m != None:
         return Response(
-            str(e), 
+            str(e),
             401,
             {'WWW-Authenticate': f'{m.method} realm="{m.realm}"'}
         )
 
     else:
-        return abort(404,f"{request.path} is not defined. Check your nginx config!!!")
-        
+        return abort(404, f"{request.path} is not defined. Check your nginx config!!!")
+
 
 @app.errorhandler(403)
 def forbidden(e) -> Response:
