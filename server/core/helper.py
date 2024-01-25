@@ -55,7 +55,7 @@ def update_login_session(username: str, request: flask.Request, session: flask.s
     session.modified = True
 
 
-def process_auth_session(module: AuthenticationModule, request: flask.Request, session: flask.sessions.SessionMixin) -> flask.Response:
+def process_session(module: AuthenticationModule, request: flask.Request, session: flask.sessions.SessionMixin) -> flask.Response:
 
     @cachetools.func.ttl_cache(ttl=3)
     def _func(path, session_id):
@@ -102,7 +102,7 @@ def process_auth_header(module: AuthenticationModule, request: flask.Request, se
     return process_login(module, request, session, username, password)
 
 
-def process_post(module: AuthenticationModule, request: flask.Request, session: flask.sessions.SessionMixin):
+def process_post_request(module: AuthenticationModule, request: flask.Request, session: flask.sessions.SessionMixin):
     """Processes incoming 'Authorization' header
 
     Args:
