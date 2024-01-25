@@ -12,7 +12,8 @@ from server.auth.modules import AuthenticationModule
 
 logger = logging.getLogger(__name__)
 
-def parse_config(path:str):
+
+def parse_config(path: str):
     try:
         logger.debug("Parsing YAML config file")
 
@@ -24,22 +25,22 @@ def parse_config(path:str):
         modules = config["modules"]
 
         for key in modules.keys():
-            modules[key] = AuthenticationModule.from_dict(modules[key]) # type: ignore
+            modules[key] = AuthenticationModule.from_dict(modules[key])  # type: ignore
 
         return settings, modules
 
     except Exception as e:
         logger.fatal(f"Aborting. Invalid Configuration: {e} ")
         raise AuthenticationConfigError(e)
-    
 
-def update_login_session(username:str, request:flask.Request, session:flask.sessions.SessionMixin):    
+
+def update_login_session(username: str, request: flask.Request, session: flask.sessions.SessionMixin):
     ses = session.get('auth')
     authorized_path = request.path
 
     if ses != None and ses['username'] == username:
         ses['authorized_path'].append(authorized_path)
-        
+
         session["auth"] = {
             'username': username,
             'authorized_path': ses['authorized_path']
@@ -50,35 +51,35 @@ def update_login_session(username:str, request:flask.Request, session:flask.sess
             'username': username,
             'authorized_path': [authorized_path]
         }
-    
+
     session.modified = True
 
 
-def process_auth_session(module:AuthenticationModule, request:flask.Request, session:flask.sessions.SessionMixin):    
-    
+def process_auth_session(module: AuthenticationModule, request: flask.Request, session: flask.sessions.SessionMixin) -> flask.Response:
+
     @cachetools.func.ttl_cache(ttl=3)
     def _func(path, session_id):
 
         ses = session.get('auth')
-        
-        if ses != None:
-            if path in ses['authorized_path']:
-                return flask.Response(f"", 200)
 
-            else: 
-                if module.local != None:
-                    user=module.local.db.get_user(ses['username'])
-                    
-                    if user != None and user.verify_role(module.local.allowed_roles):
-                        update_login_session(ses['username'], request, session)
-                        return flask.Response(f"", 200)
-        
-        return None
-    
-    return _func(request.path, session.sid) # type: ignore
+        if ses == None:
+            flask.abort(401)
+
+        if path in ses['authorized_path']:
+            return flask.Response(f"", 200)
+
+        else:
+            if module.local != None:
+                user = module.local.db.get_user(ses['username'])
+
+                if user != None and user.verify_role(module.local.allowed_roles):
+                    update_login_session(ses['username'], request, session)
+                    return flask.Response(f"", 200)
+
+    return _func(request.path, session.sid)  # type: ignore
 
 
-def process_auth_header(module:AuthenticationModule, request:flask.Request, session:flask.sessions.SessionMixin):
+def process_auth_header(module: AuthenticationModule, request: flask.Request, session: flask.sessions.SessionMixin):
     """Processes incoming 'Authorization' header
 
     Args:
@@ -91,13 +92,40 @@ def process_auth_header(module:AuthenticationModule, request:flask.Request, sess
 
     if request.authorization == None:
         return flask.abort(401)
-    
+
     if request.authorization.type != 'basic':
         return flask.abort(401, f"authentication '{request.authorization.type}' is not supported")
-    
-    
-    username = request.authorization.parameters['username']
-    password = request.authorization.parameters['password']
+
+    username = request.authorization.parameters.get('username')
+    password = request.authorization.parameters.get('password')
+
+    return process_login(module, request, session, username, password)
+
+
+def process_post(module: AuthenticationModule, request: flask.Request, session: flask.sessions.SessionMixin):
+    """Processes incoming 'Authorization' header
+
+    Args:
+        modules: authentication module
+
+    Returns:
+        Response
+    """
+
+    username = request.form.get('username')
+    password = request.form.get('password')
+    remember = request.form.get('remember')
+
+    res = process_login(module, request, session, username, password)
+
+    if res.status_code == 200 and remember != None:
+        session.permanent = True
+        session.modified = True
+
+    return res
+
+
+def process_login(module: AuthenticationModule, request: flask.Request, session: flask.sessions.SessionMixin, username: str | None, password: str | None):
 
     if username == None or password == None:
         return flask.abort(401)

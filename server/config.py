@@ -6,7 +6,7 @@ import secrets
 
 CONFIG_DIR = os.getenv("CONFIG_DIR", "/config")
 CONFIG_PATH = os.getenv("CONFIG_PATH", os.path.join(CONFIG_DIR, 'config.yml'))
-
+TEMPLATE_FOLDER = os.getenv("TEMPLATE_FOLDER", "/app/templates")
 #CACHE_TTL = os.getenv("CACHE_TTL", '60')
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 

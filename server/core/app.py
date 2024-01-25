@@ -16,7 +16,7 @@ import cachetools
 import cachetools.func
 import waitress
 import werkzeug.exceptions
-from flask import Flask, Response, abort, request, session
+from flask import Flask, Response, abort, request, session, render_template
 from flask_wtf.csrf import CSRFProtect
 
 import server.auth.modules
@@ -27,7 +27,7 @@ from server.core.helper import *
 app_config, auth_modules = parse_config(config.CONFIG_PATH)
 
 logger = logging.getLogger(__name__)
-app = Flask(__name__)
+app = Flask(__name__,template_folder=config.TEMPLATE_FOLDER)
 
 for k in os.environ.keys():
     if k.startswith("FLASK_"):
@@ -88,38 +88,48 @@ def main(path):
         a_h = request.headers.get("Authorization")
 
         if a_h == None or a_h == "Basic Og==":
-            return Response(f"Logout successful <br> <a href={redirect_url}> Home</a>", 401)
+            return Response(f"Logout successful <br> <a href={redirect_url}>Home</a>", 401)
 
         else:
             return abort(401)
+        
+    elif 'login' in request.args and ('username' not in request.form or 'password' not in request.form):
+        return render_template("index.html")
 
+
+    # Login
     try:
         module = auth_modules[request.path]
     except KeyError:
         return abort(404)
 
-    res = process_auth_session(module, request, session)
-    if res != None:
-        if 'remember' in request.args:
+    if session.get('auth') != None:
+        res = process_auth_session(module, request, session)
+
+        if 'remember' in request.args and res.status_code == 200:
             session.permanent = True
             session.modified = True
-            return flask.redirect(redirect_url)
 
     else:
-        res = process_auth_header(module, request, session)
 
-        if redirect_url != None:
-            res.set_data(
-                str(res.data, 'utf-8') +
-                f"""
-                <p>You will be redirected in 5 seconds to {redirect_url} </p>\
-                <script>
-                    var timer = setTimeout(
-                        function() {{window.location='{redirect_url}'}}, 5000);
-                </script>
-                """
-            )
- 
+        if 'username' in request.form and 'password' in request.form :
+            res = process_post(module, request, session)
+    
+        else:
+            res = process_auth_header(module, request, session)
+
+    if redirect_url != None:
+        res.set_data(
+            str(res.data, 'utf-8') +
+            f"""
+            <p>You will be redirected in 1 seconds to <a href={redirect_url}> {redirect_url}</a> </p>\
+            <script>
+                var timer = setTimeout(
+                    function() {{window.location='{redirect_url}'}}, 1000);
+            </script>
+            """
+        )
+
     return res
 
 
