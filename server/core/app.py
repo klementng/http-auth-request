@@ -78,9 +78,13 @@ def main(path):
 
     path = request.path if request.path != '/' else "/auth"
     request.path = path
-
     redirect_url = request.args.get("redirect_url", "/")
 
+    try:
+        module = auth_modules[request.path]
+    except KeyError:
+        return abort(404)
+    
     if 'logout' in request.args:
         logger.debug('Logging out')
         session.clear()
@@ -92,31 +96,26 @@ def main(path):
 
         else:
             return abort(401)
-        
-    elif 'login' in request.args and ('username' not in request.form or 'password' not in request.form):
-        return render_template("index.html")
+    
+    elif session.get('auth') != None:
+        res = process_session(module, request, session)
 
+    elif request.method == 'POST':
+        res = process_post_request(module, request, session)
 
-    # Login
-    try:
-        module = auth_modules[request.path]
-    except KeyError:
-        return abort(404)
-
-    if session.get('auth') != None:
-        res = process_auth_session(module, request, session)
-
-        if 'remember' in request.args and res.status_code == 200:
-            session.permanent = True
-            session.modified = True
-
+    elif request.authorization != None:
+        res = process_auth_header(module, request, session)
+    
     else:
 
-        if 'username' in request.form and 'password' in request.form :
-            res = process_post(module, request, session)
-    
+        if 'login' in request.args:
+            return render_template("index.html")
         else:
-            res = process_auth_header(module, request, session)
+            return abort(401)
+    
+    if 'remember' in request.args and res.status_code == 200:
+        session.permanent = True
+        session.modified = True
 
     if redirect_url != None:
         res.set_data(
