@@ -75,8 +75,10 @@ def process_session(module: AuthenticationModule, request: flask.Request, sessio
                 if user != None and user.verify_role(module.local.allowed_roles):
                     update_login_session(ses['username'], request, session)
                     return flask.Response(f"", 200)
+            
+            return flask.Response(f"", 403)
 
-    return _func(request.path, session.sid)  # type: ignore
+    return _func(request.path, session.sid)
 
 
 def process_auth_header(module: AuthenticationModule, request: flask.Request, session: flask.sessions.SessionMixin):
