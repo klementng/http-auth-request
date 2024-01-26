@@ -107,27 +107,28 @@ def main(path):
         res = process_auth_header(module, request, session)
     
     else:
-
         if 'login' in request.args:
-            return render_template("index.html")
+            return render_template("index.html"), 401
         else:
             return abort(401)
     
-    if 'remember' in request.args and res.status_code == 200:
-        session.permanent = True
-        session.modified = True
+    if res.status_code == 200:
 
-    if redirect_url != None:
-        res.set_data(
-            str(res.data, 'utf-8') +
-            f"""
-            <p>You will be redirected in 1 seconds to <a href={redirect_url}> {redirect_url}</a> </p>\
-            <script>
-                var timer = setTimeout(
-                    function() {{window.location='{redirect_url}'}}, 1000);
-            </script>
-            """
-        )
+        if 'remember' in request.args:
+            session.permanent = True
+            session.modified = True
+
+        if redirect_url != None:
+            res.set_data(
+                str(res.data, 'utf-8') +
+                f"""
+                <p>You will be redirected in 1 seconds to <a href={redirect_url}> {redirect_url}</a> </p>\
+                <script>
+                    var timer = setTimeout(
+                        function() {{window.location='{redirect_url}'}}, 1000);
+                </script>
+                """
+            )
 
     return res
 
@@ -145,6 +146,13 @@ def unauthorized(e: werkzeug.exceptions.Unauthorized) -> Response:
             str(e),
             401,
             {'WWW-Authenticate': f'{m.method} realm="{m.realm}"'}
+        )
+    
+    if 'login' in request.args:
+        flask.flash("Incorrect username or password")
+        return Response(
+            render_template("index.html"),
+            401
         )
 
     else:

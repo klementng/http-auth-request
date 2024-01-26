@@ -78,7 +78,7 @@ def process_session(module: AuthenticationModule, request: flask.Request, sessio
             
             return flask.Response(f"", 403)
 
-    return _func(request.path, session.sid)
+    return _func(request.path, session.sid) # type: ignore
 
 
 def process_auth_header(module: AuthenticationModule, request: flask.Request, session: flask.sessions.SessionMixin):
