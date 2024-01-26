@@ -88,7 +88,7 @@ def main(path):
     if 'logout' in request.args:
         logger.debug('Logging out')
 
-        for key in  session:
+        for key in list(session.keys()):
             session.pop(key)
         
         session.modified = True
