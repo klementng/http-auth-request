@@ -143,7 +143,7 @@ def unauthorized(e: werkzeug.exceptions.Unauthorized) -> Response:
     m = auth_modules.get(request.path)
 
     if 'login' in request.args:
-        flask.flash("Incorrect username or password")
+        flask.flash("Incorrect username or password",'danger')
         return Response(
             render_template("index.html"),
             401
