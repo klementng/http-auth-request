@@ -109,6 +109,7 @@ def main(path):
     else:
         if 'login' in request.args:
             return render_template("index.html"), 401
+        
         else:
             return abort(401)
     
@@ -141,13 +142,6 @@ def unauthorized(e: werkzeug.exceptions.Unauthorized) -> Response:
 
     m = auth_modules.get(request.path)
 
-    if m != None:
-        return Response(
-            str(e),
-            401,
-            {'WWW-Authenticate': f'{m.method} realm="{m.realm}"'}
-        )
-    
     if 'login' in request.args:
         flask.flash("Incorrect username or password")
         return Response(
@@ -155,6 +149,13 @@ def unauthorized(e: werkzeug.exceptions.Unauthorized) -> Response:
             401
         )
 
+    elif m != None:
+        return Response(
+            str(e),
+            401,
+            {'WWW-Authenticate': f'{m.method} realm="{m.realm}"'}
+        )
+    
     else:
         return abort(404, f"{request.path} is not defined. Check your nginx config!!!")
 
