@@ -87,6 +87,11 @@ def main(path):
     
     if 'logout' in request.args:
         logger.debug('Logging out')
+
+        for key in  session:
+            session.pop(key)
+        
+        session.modified = True
         session.clear()
 
         a_h = request.headers.get("Authorization")
